@@ -1,0 +1,6 @@
+Ezbl - Emacs interface for Uzbl (uzbl.org)
+
+This package creates an Emacs interface for Uzbl, allowing you to control uzbl
+from within Emacs.
+
+Copyright 2009, Daniel Hackney
