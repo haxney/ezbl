@@ -66,6 +66,16 @@ The following keywords are used:
         Socket ID for GtkSocket.
 :display DISPLAY
         X display to use
+
+Returns an ezbl instance alist of the form:
+
+  ((arguments . (\"--option1\" \"value\" \"--switch\"))
+   (process . #<process ezbl-suffix>)
+   (suffix . SUFFIX)
+   (buffer . \"ezbl-suffix*\")
+   (proc-name . \"ezbl-suffix\"))
+
+This 'ezbl instance' is used in various other functions.
 "
   (let ((program-args nil)
         (instance `((suffix . ,suffix)
