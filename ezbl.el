@@ -131,4 +131,22 @@ This 'ezbl instance' is used in various other functions.
                                (process . ,proc))
                              instance)))))
 
+(defun ezbl-command (instance command)
+  "Sends the string COMMAND to the Uzbl instance INSTANCE.
+
+COMMAND is a Uzbl command as described by the Uzbl
+readme (http://www.uzbl.org/readme.php).
+
+See `ezbl-start' for a description of the format of INSTANCE."
+  ;; Append a newline (\n) to the end of COMMAND if one is not already there.
+  (when (not (string= "\n" (substring command -1)))
+    (setq command (concat command "\n")))
+  (process-send-string (cdr (assq 'process instance)) command))
+
+(defun ezbl-uri-set (instance uri)
+  "Set the uri of the Uzbl INSTANCE to URI.
+
+See `ezbl-start' for a description of the format of INSTANCE."
+  (ezbl-command instance (concat "uri " uri)))
+
 ;;; ezbl.el ends here
