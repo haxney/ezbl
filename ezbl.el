@@ -30,9 +30,13 @@
 
 (defvar ezbl-processes nil "A list of Uzbl processes")
 
-(defun ezbl-start (&rest args)
+(defun ezbl-start (suffix &rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
 options and values to pass to the Uzbl instance.
+
+SUFFIX is the string suffix of the process and buffer names. If
+SUFFIX is '1234', then the process 'uzbl-1234' and buffer
+'*uzbl-1234*' would be created.
 
 The following keywords are used:
 
@@ -63,47 +67,58 @@ The following keywords are used:
 :display DISPLAY
         X display to use
 "
-  (let ((program-args nil))
-  (while args
-    (let ((arg (car args)))
-      (setq args (cdr args))
-      (unless (symbolp arg)
-        (error "Junk in args %S" args))
-      (let ((keyword arg)
-            (value (car args)))
-        (unless args
-          (error "Keyword %s is missing an argument" keyword))
+  (let ((program-args nil)
+        (instance `((suffix . ,suffix)
+                    (buffer . ,(concat "*ezbl-" suffix "*"))
+                    (proc-name . ,(concat "ezbl-" suffix)))))
+    ;; Process keywords
+    (while args
+      (let ((arg (car args)))
         (setq args (cdr args))
+        (unless (symbolp arg)
+          (error "Junk in args %S" args))
+        (let ((keyword arg)
+              (value (car args)))
+          (unless args
+            (error "Keyword %s is missing an argument" keyword))
+          (setq args (cdr args))
+          (cond
+           ((eq keyword :class)
+            (setq program-args (append program-args (list "--class") (list value))))
+           ((eq keyword :gtk-name)
+            (setq program-args (append program-args (list "--gtk-name") (list value))))
+           ((eq keyword :screen)
+            (setq program-args (append program-args (list "--screen") (list value))))
+           ((eq keyword :sync)
+            (setq program-args (append program-args (list "--sync"))))
+           ((eq keyword :gtk-module)
+            (setq program-args (append program-args (list "--gtk-module")
+                                       (list (mapconcat 'identity value ",")))))
+           ((eq keyword :g-fatal-warnings)
+            (setq program-args (append program-args (list "--g-fatal-warnings "))))
+           ((eq keyword :uri)
+            (setq program-args (append program-args (list "--uri") (list value))))
+           ((eq keyword :verbose)
+            (setq program-args (append program-args (list "--verbose"))))
+           ((eq keyword :name)
+            (setq program-args (append program-args (list "--name") (list value))))
+           ((eq keyword :config)
+            (setq program-args (append program-args (list "--config") (list value))))
+           ((eq keyword :socket)
+            (setq program-args (append program-args (list "--socket") (list value))))
+           ((eq keyword :display)
+            (setq program-args (append program-args (list "--display") (list value))))))))
 
-        (cond
-         ((eq keyword :class)
-          (setq program-args (append program-args (list "--class") (list value))))
-         ((eq keyword :gtk-name)
-          (setq program-args (append program-args (list "--gtk-name") (list value))))
-         ((eq keyword :screen)
-          (setq program-args (append program-args (list "--screen") (list value))))
-         ((eq keyword :sync)
-          (setq program-args (append program-args (list "--sync"))))
-         ((eq keyword :gtk-module)
-          (setq program-args (append program-args (list "--gtk-module")
-                                     (list (mapconcat 'identity value ",")))))
-         ((eq keyword :g-fatal-warnings)
-          (setq program-args (append program-args (list "--g-fatal-warnings "))))
-         ((eq keyword :uri)
-          (setq program-args (append program-args (list "--uri") (list value))))
-         ((eq keyword :verbose)
-          (setq program-args (append program-args (list "--verbose"))))
-         ((eq keyword :name)
-          (setq program-args (append program-args (list "--name") (list value))))
-         ((eq keyword :config)
-          (setq program-args (append program-args (list "--config") (list value))))
-         ((eq keyword :socket)
-          (setq program-args (append program-args (list "--socket") (list value))))
-         ((eq keyword :display)
-          (setq program-args (append program-args (list "--display") (list value))))
-         )
-        )))
-  program-args
-))
+    ;; Start process
+    (let* ((proc-name (cdr (assq 'proc-name instance)))
+           (buffer-name (cdr (assq 'buffer instance)))
+           (proc (apply 'start-process
+                        (append (list proc-name
+                                      buffer-name
+                                      ezbl-exec-path)
+                                program-args))))
+      (setq instance (append `((arguments . ,program-args)
+                               (process . ,proc))
+                             instance)))))
 
 ;;; ezbl.el ends here
