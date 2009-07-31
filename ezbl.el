@@ -30,6 +30,12 @@
 
 (defvar ezbl-processes nil "A list of Uzbl processes")
 
+(defvar ezbl-instance nil
+  "A buffer-local variable storing the current Ezbl instance.
+
+See `ezbl-start' for a description of the format of this
+variable.")
+
 (defvar ezbl-commands
   '(((name . "set")
      (format . "set <key> = <value>")
@@ -416,7 +422,9 @@ This 'ezbl instance' is used in various other functions.
                                 program-args))))
       (setq instance (append `((arguments . ,program-args)
                                (process . ,proc))
-                             instance)))))
+                             instance))
+      (with-current-buffer buffer-name
+        (set (make-local-variable 'ezbl-instance) instance)))))
 
 (defun ezbl-exec-command (instance command)
   "Sends the string COMMAND to the Uzbl instance INSTANCE.
