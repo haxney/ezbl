@@ -31,9 +31,10 @@
 (defvar ezbl-processes nil "A list of Uzbl processes")
 
 (defvar ezbl-commands
-  '((name . "set")
-    (format . "set <key> = <value>")
-    (doc . "* used for changing variables on the fly
+  '(((name . "set")
+     (format . "set <key> = <value>")
+     (doc . "Used for changing variables on the fly. Sets KEY
+     equal to VALUE.
 
 * the changes are effective immediately; for example, setting the
   variable uri will make uzbl start loading, and changing
@@ -41,6 +42,220 @@
 
 * if you want to unset a string, use `set' with one space as the
   value."))
+
+    ((name . "print")
+     (format . "print <key>")
+     (doc . "Print the value of KEY.
+
+If KEY contains a string of the form '@var', the value of the Uzl
+variable 'var' is printed.
+
+* use this to print the value of a variable."))
+    ((name . "bind")
+     (format . "bind <string> = <command>")
+     (doc . "Sets the character sequence STRING to invoke COMMAND
+     when typed interactively in Uzbl.
+
+* there are a few tricks you can do:
+
+  - STRING ends with an underscore: the command will only be
+    invoked after pressing return/enter. If the user enters text
+    where STRING has the underscore, %s in the COMMAND string
+    will be replaced by this text. (optional)
+
+  - STRING ends with an asterisk: similar behavior as with an
+    underscore, but also makes the binding incremental (i.e. the
+    command will be invoked on every keystroke).
+
+  - STRING ends on a different character: you need to type the
+    full string, which will trigger the command immediately,
+    without pressing enter/return.
+
+* examples:
+  - bind o _ = uri %s
+                + uzbl will load the url when you type: 'o '
+  - bind /* = search %s
+
+    + a search command which is called on every character typed
+      after the slash, letting you see the search narrow down
+      while typing.
+
+    + Hitting return, enter or esc will terminate the search.
+
+  - bind ZZ = exit
+
+    + When you type ZZ and nothing else, the exit command will be
+      triggered immediately."))
+    ((name . "back")
+     (format . "back")
+     (doc . "Move backwards in the browser history."))
+    ((name . "forward")
+     (format . "forward")
+     (doc . "Move forwards in the browser history."))
+    ((name . "scroll_vert")
+     (format . "scroll_vert <amount>")
+     (doc . "Scroll vertically by AMOUNT.
+
+AMOUNT is specified either in pixels, with a 'px' ending (55px)
+or percentage (55%).
+
+* amount is given in pixels(?) or as a percentage of the size of
+  the view
+
+* set amount to 100% to scroll a whole page."))
+    ((name . "scroll_horz")
+     (format . "scroll_horz <amount>")
+     (doc . "Scroll horizontally by AMOUNT.
+
+AMOUNT is specified either in pixels, with a 'px' ending (55px)
+or percentage (55%).
+
+* amount is given in pixels(?) or as a percentage of the size of
+  the view
+
+* set amount to 100% to scroll a whole page"))
+    ((name . "scroll_begin")
+     (format . "scroll_begin")
+     (doc . "Scroll to the beginning of the page."))
+    ((name . "scroll_end")
+     (format . "scroll_end")
+     (doc . "Scroll to the end of the page."))
+    ((name . "reload")
+     (format . "reload")
+     (doc . "Reload the current page."))
+    ((name . "reload_ign_cache")
+     (format . "reload_ign_cache")
+     (doc . "Reload the current page, clearing the cache."))
+    ((name . "stop")
+     (format . "stop")
+     (doc . "Stop the currently loading page."))
+    ((name . "zoom_in")
+     (format . "zoom_in")
+     (doc . "Increase the zoom level."))
+    ((name . "zoom_out")
+     (format . "zoom_out")
+     (doc . "Decrease the zoom level."))
+    ((name . "uri")
+     (format . "uri <address>")
+     (doc . "Visit the Uri ADDRESS"))
+    ((name . "js")
+     (format . "js <body>")
+     (doc . "Execute JavaScript within the browser.
+
+* execute the javascript in BODY.
+* remember that the commands must not contain line breaks."))
+    ((name . "script")
+     (format . "script <file>")
+     (doc . "execute the JavaScript in FILE."))
+    ((name . "toggle_status")
+     (format . "toggle_status")
+     (doc . ""))
+    ((name . "spawn")
+     (format . "spawn <executable> <additonal args>")
+     (doc . "Runs a command.
+
+* See the \"external scripts\" section of the Uzbl readme for
+  details.
+
+* PATH is searched so giving the full path to commands is not
+  necessary.
+
+* note that the arguments as specified in \"external scripts\"
+  are appended at the end, so the argument numbers will be
+  higher."))
+    ((name . "sh")
+     (format . "sh <command>")
+     (doc . "Run a shell command.
+
+* runs a shell command by expanding %s in the shell_cmd variable
+  with the specified command; primarily useful as a shortcut for
+  \"spawn sh -c BODY\"
+
+* note that the arguments as specified in \"external scripts\"
+  are appended at the end, so the argument numbers will be
+  higher."))
+    ((name . "sync_spawn")
+     (format . "sync_spawn <executable> <additional args>")
+     (doc . "Tell Uzbl to synchronously spawn a command.
+
+See `ezbl-command-spawn' for details.
+
+* these are synchronous variants of spawn and sh, which means
+  uzbl will wait for them to return.
+
+* you should only need to use these manually if you want to use a
+  chain command in a handler that wants output from the command
+  it runs"))
+    ((name . "sync_sh")
+     (format . "sync_sh <command>")
+     (doc . "Tell Uzbl to synchronously run a shell command.
+
+See `ezbl-command-sh' for details.
+
+* these are synchronous variants of spawn and sh, which means
+  uzbl will wait for them to return.
+
+* you should only need to use these manually if you want to use a
+  chain command in a handler that wants output from the command
+  it runs"))
+    ((name . "exit")
+     (format . "exit")
+     (doc . "Close this instance of Uzbl."))
+    ((name . "search")
+     (format . "search <string>")
+     (doc . "Search for STRING within the content of the current
+     Uzbl page.
+
+* search with no string will search for the next/previous
+  occurrence of the string previously searched for."))
+    ((name . "search_reverse")
+     (format . "search_reverse <string>")
+     (doc . "Search backwards for STRING in the current page.
+
+* search with no string will search for the next/previous
+  occurrence of the string previously searched for."))
+    ((name . "toggle_insert_mode")
+     (format . "toggle_insert_mode <optional state>")
+     (doc . "Set the insert mode to OPTIONAL_STATE.
+
+If the optional state is 0, disable insert mode. If 1, enable
+insert mode."))
+    ((name . "dump_config")
+     (format . "dump_config")
+     (doc . "Dump the current Uzbl configuration.
+
+* dumps your current config (which may have been changed at
+  runtime) to stdout, in a format you can use to pipe into uzbl
+  again (or use as config file)"))
+    ((name . "keycmd")
+     (format . "keycmd <string>")
+     (doc . "Set the interactive command buffer to STRING.
+
+If STRING is a valid binding, it will execute."))
+    ((name . "keycmd_nl")
+     (format . "keycmd_nl <string>")
+     (doc . "Set the interactive command buffer to STRING and emulate pressing return.
+
+See `ezbl-command-keycmd'.
+
+`ezbl-command-keycmd_nl' is like `ezbl-command-keycmd', but it
+also emulates a press of return, causing bindings with a
+parameter to execute. For example, keycmd_nl o google.com would
+load the said url if you have a binding like \"bind o _ = uri %s\"."))
+    ((name . "keycmd_bs")
+     (format . "keycmd_bs")
+     (doc . "Erase (backspace) one character from the command buffer."))
+    ((name . "chain")
+     (format . "chain <command> <command>")
+     (doc . "Use for chaining multiple commands.
+
+* remember to quote the commands; one command must come as one
+  parameter.
+
+* If you use chain with a handler script which must return some
+  output (such as a cookie handler -- uzbl will wait for and use
+  its output), use 'sync_spawn' or 'sync_sh' instead of 'spawn'
+  or 'sh' in the command that should give the output.")))
   "A list of commands which Uzbl accepts. These are used to
 generate the functions to call each command.
 
@@ -207,10 +422,5 @@ See `ezbl-start' for a description of the format of INSTANCE."
     (setq command (concat command "\n")))
   (process-send-string (cdr (assq 'process instance)) command))
 
-(defun ezbl-uri-set (instance uri)
-  "Set the uri of the Uzbl INSTANCE to URI.
-
-See `ezbl-start' for a description of the format of INSTANCE."
-  (ezbl-command instance (concat "uri " uri)))
 
 ;;; ezbl.el ends here
