@@ -30,6 +30,67 @@
 
 (defvar ezbl-processes nil "A list of Uzbl processes")
 
+(defvar ezbl-commands
+  '((name . "set")
+    (format . "set <key> = <value>")
+    (doc . "* used for changing variables on the fly
+
+* the changes are effective immediately; for example, setting the
+  variable uri will make uzbl start loading, and changing
+  status_format will make the status bar react immediately
+
+* if you want to unset a string, use `set' with one space as the
+  value."))
+  "A list of commands which Uzbl accepts. These are used to
+generate the functions to call each command.
+
+The following attributes can be used in each alist:
+
+- name (mandatory)
+
+  The name of the command. This is the string that is passed to
+  Uzbl when invoking the command.
+
+- format (mandatory)
+
+  The format of the command, for example
+
+    scroll_vert <amount>
+
+  All variables must be enclosed in angle brackets.")
+
+(defun ezbl-get-command-args (command)
+  "Extracts the arguments (as symbols) from a Uzbl command specification.
+
+For example, the spec
+
+  scroll_vert <amount>
+
+Would return (amount)."
+  (let ((start 0)
+        (args nil))
+    (while (string-match "<\\([[:alnum:]_-]+\\)>" command start)
+      (setq args (append (list (make-symbol (match-string 1 command))) args))
+      (setq start (match-end 1)))
+    args))
+
+(defun ezbl-make-command-func (spec)
+  "Creates a function which produces the Uzbl command string described by SPEC.
+
+The function created takes a number of arguments specified by the
+`format' attribute of SPEC and returns a string suitable for
+`ezbl-exec-command'.
+
+See `ezbl-commands' for a description of the format of SPEC."
+  (let* ((name (cdr (assq 'name spec)))
+         (format (cdr (assq 'format spec)))
+         (args (ezbl-get-command-args format))
+         (doc (cdr (assq 'doc spec)))
+         (output-format (replace-regexp-in-string "<[[:alnum:]_-]+>" "%s" format)))
+  `(defun ,(make-symbol (concat "ezbl-command-" name)) ,args
+     ,doc
+     (format ,output-format ,@args))))
+
 (defun ezbl-start (suffix &rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
 options and values to pass to the Uzbl instance.
@@ -131,7 +192,7 @@ This 'ezbl instance' is used in various other functions.
                                (process . ,proc))
                              instance)))))
 
-(defun ezbl-command (instance command)
+(defun ezbl-exec-command (instance command)
   "Sends the string COMMAND to the Uzbl instance INSTANCE.
 
 COMMAND is a Uzbl command as described by the Uzbl
