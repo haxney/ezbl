@@ -309,6 +309,14 @@ See `ezbl-commands' for a description of the format of SPEC."
              (ezbl-exec-command instance (format ,output-format ,@args))))
     command-name))
 
+(defun ezbl-init-commands ()
+  "Create Emacs functions from `ezbl-commands'.
+
+Read through `ezbl-commands' and call `ezbl-make-command-func' on
+each one."
+  (interactive)
+  (mapcar 'ezbl-make-command-func ezbl-commands))
+
 (defun ezbl-start (suffix &rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
 options and values to pass to the Uzbl instance.
