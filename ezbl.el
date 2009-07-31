@@ -36,6 +36,10 @@
 See `ezbl-start' for a description of the format of this
 variable.")
 
+(defconst ezbl-buffer-format "*ezbl-%s*"
+  "The format used for transforming ezbl instance names into
+buffer names."
+
 (defvar ezbl-commands
   '(((name . "set")
      (format . "set <key> = <value>")
@@ -323,12 +327,12 @@ each one."
   (interactive)
   (mapcar 'ezbl-make-command-func ezbl-commands))
 
-(defun ezbl-start (suffix &rest args)
+(defun ezbl-start (name &rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
 options and values to pass to the Uzbl instance.
 
-SUFFIX is the string suffix of the process and buffer names. If
-SUFFIX is '1234', then the process 'uzbl-1234' and buffer
+NAME is the base from which to form the process and buffer
+names. If NAME is '1234', then the process 'uzbl-1234' and buffer
 '*uzbl-1234*' would be created.
 
 The following keywords are used:
@@ -363,17 +367,17 @@ The following keywords are used:
 Returns an ezbl instance alist of the form:
 
   ((arguments . (\"--option1\" \"value\" \"--switch\"))
-   (process . #<process ezbl-suffix>)
-   (suffix . SUFFIX)
-   (buffer . \"ezbl-suffix*\")
-   (proc-name . \"ezbl-suffix\"))
+   (process . #<process ezbl-name>)
+   (name . NAME)
+   (buffer . \"ezbl-name*\")
+   (proc-name . \"ezbl-name\"))
 
 This 'ezbl instance' is used in various other functions.
 "
   (let ((program-args nil)
-        (instance `((suffix . ,suffix)
-                    (buffer . ,(concat "*ezbl-" suffix "*"))
-                    (proc-name . ,(concat "ezbl-" suffix)))))
+        (instance `((name . ,name)
+                    (buffer . ,(format ezbl-buffer-format name))
+                    (proc-name . ,(concat "ezbl-" name)))))
     ;; Process keywords
     (while args
       (let ((arg (car args)))
@@ -453,7 +457,7 @@ See `ezbl-start' for a description of the format of INSTANCE."
                (with-current-buffer instance-or-buffer
                  ezbl-instance)
              ;; Is the name of an instance, so open the buffer named "*ezbl-name*"
-             (with-current-buffer (concat "*ezbl-" instance-or-buffer "*")
+             (with-current-buffer (format ezbl-buffer-format instance-or-buffer)
                  ezbl-instance))))))
     (when (null instance)
       (error (concat instance-or-buffer " is not an Ezbl instance or an Ezbl buffer.")))
