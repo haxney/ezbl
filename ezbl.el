@@ -38,7 +38,7 @@ variable.")
 
 (defconst ezbl-buffer-format "*ezbl-%s*"
   "The format used for transforming ezbl instance names into
-buffer names."
+buffer names.")
 
 (defvar ezbl-commands
   '(((name . "set")
@@ -369,7 +369,7 @@ Returns an ezbl instance alist of the form:
   ((arguments . (\"--option1\" \"value\" \"--switch\"))
    (process . #<process ezbl-name>)
    (name . NAME)
-   (buffer . \"ezbl-name*\")
+   (buffer . \"*ezbl-name*\")
    (proc-name . \"ezbl-name\"))
 
 This 'ezbl instance' is used in various other functions.
