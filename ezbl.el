@@ -70,7 +70,7 @@ Would return (amount)."
   (let ((start 0)
         (args nil))
     (while (string-match "<\\([[:alnum:]_-]+\\)>" command start)
-      (setq args (append (list (make-symbol (match-string 1 command))) args))
+      (setq args (append (list (intern (match-string 1 command))) args))
       (setq start (match-end 1)))
     args))
 
@@ -86,10 +86,13 @@ See `ezbl-commands' for a description of the format of SPEC."
          (format (cdr (assq 'format spec)))
          (args (ezbl-get-command-args format))
          (doc (cdr (assq 'doc spec)))
-         (output-format (replace-regexp-in-string "<[[:alnum:]_-]+>" "%s" format)))
-  `(defun ,(make-symbol (concat "ezbl-command-" name)) ,args
-     ,doc
-     (format ,output-format ,@args))))
+         (output-format (replace-regexp-in-string "<[[:alnum:]_-]+>" "%s" format))
+         (command-name (intern (concat "ezbl-command-" name))))
+    (fset command-name
+          `(lambda (instance ,@args)
+             ,doc
+             (ezbl-exec-command instance (format ,output-format ,@args))))
+    command-name))
 
 (defun ezbl-start (suffix &rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
