@@ -430,16 +430,14 @@ This 'ezbl instance' is used in various other functions.
       (with-current-buffer buffer-name
         (set (make-local-variable 'ezbl-instance) instance)))))
 
-(defun ezbl-exec-command (instance-or-buffer command)
-  "Sends the string COMMAND to the Uzbl instance INSTANCE-OR-BUFFER.
+(defun ezbl-get-instance (instance-or-buffer)
+  "Returns the ezbl instance from INSTANCE-OR-BUFFER.
 
-If INSTANCE-OR-BUFFER is a buffer, use the value of
-`ezbl-instance' in that buffer. If
+If INSTANCE-OR-BUFFER is an ezbl instance, then it is returned
+unchanged. If it is a buffer, then the local variable of
+`ezbl-instance' is returned.
 
-COMMAND is a Uzbl command as described by the Uzbl
-readme (http://www.uzbl.org/readme.php).
-
-See `ezbl-start' for a description of the format of INSTANCE."
+Returns an ezbl instance, or `nil' if none was found."
   (let ((instance
          (cond
           ;; Is an instance.
@@ -458,14 +456,28 @@ See `ezbl-start' for a description of the format of INSTANCE."
                  ezbl-instance)
              ;; Is the name of an instance, so open the buffer named "*ezbl-name*"
              (with-current-buffer (format ezbl-buffer-format instance-or-buffer)
-                 ezbl-instance))))))
+               ezbl-instance))))))
     (when (null instance)
       (error (concat instance-or-buffer " is not an Ezbl instance or an Ezbl buffer.")))
+    instance))
 
-  ;; Append a newline (\n) to the end of COMMAND if one is not already there.
-  (when (not (string= "\n" (substring command -1)))
-    (setq command (concat command "\n")))
-  (process-send-string (cdr (assq 'process instance)) command)))
+(defun ezbl-exec-command (instance-or-buffer command)
+  "Sends the string COMMAND to the Uzbl instance INSTANCE-OR-BUFFER.
+
+If INSTANCE-OR-BUFFER is a buffer, use the value of
+`ezbl-instance' in that buffer. If
+
+COMMAND is a Uzbl command as described by the Uzbl
+readme (http://www.uzbl.org/readme.php).
+
+See `ezbl-start' for a description of the format of INSTANCE."
+  (let ((instance (ezbl-get-instance instance-or-buffer)))
+
+
+    ;; Append a newline (\n) to the end of COMMAND if one is not already there.
+    (when (not (string= "\n" (substring command -1)))
+      (setq command (concat command "\n")))
+    (process-send-string (cdr (assq 'process instance)) command)))
 
 
 ;;; ezbl.el ends here
