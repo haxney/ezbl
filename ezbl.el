@@ -479,5 +479,20 @@ See `ezbl-start' for a description of the format of INSTANCE."
       (setq command (concat command "\n")))
     (process-send-string (cdr (assq 'process instance)) command)))
 
+(defun ezbl-get-variable (instance-or-buffer var)
+  "Return the value of VAR from the ezbl instance INSTANCE-OR-BUFFER."
+  (let ((instance (ezbl-get-instance instance-or-buffer))
+        (tag (sha1 (int-to-string (random)))))
+    (with-current-buffer (cdr (assq 'buffer instance))
+      (ezbl-command-print instance
+                          (format "ezbl-tag(%s){@%s}" tag var))
+      (goto-char (point-max))
+      ;; Keep trying until tag is found. TODO: avoid searching backwards through
+      ;; the whole buffer.
+      (while (not (re-search-backward (format "ezbl-tag(%s){\\(.*\\)}" tag) (point-min) t))
+        (goto-char (point-max))
+        ;; Sleep for 1 millisecond
+        (sleep-for 0 1))
+      (match-string 1))))
 
 ;;; ezbl.el ends here
