@@ -28,7 +28,16 @@
   :group 'ezbl
   :type 'file)
 
-(defvar ezbl-processes nil "A list of Uzbl processes")
+(defvar ezbl-instances nil
+  "A list of Uzbl instances.
+
+Has the format:
+
+  ((name  . instance)
+   (name2 . instance2))
+
+See `ezbl-start' for a description of the format of the instance
+variable.")
 
 (defvar ezbl-instance nil
   "A buffer-local variable storing the current Ezbl instance.
