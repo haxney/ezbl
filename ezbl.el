@@ -586,7 +586,36 @@ HEIGHT - The height of the widget"
      (1+ (point))
      'display
      (list 'xwidget ':xwidget-id id ':type type ':title title ':width width ':height height))))
+
+(defun ezbl-embed (name)
+  "Embed the Uzbl window specified by INSTANCE in its buffer."
+  (save-excursion
+    (use-local-map (make-sparse-keymap))
+    (define-key (current-local-map) [(xwidget-event)] 'ezbl-xwidget-handler)
+      (ezbl-xwidget-insert
+       (point)                     ;; Where
+       (ezbl-xwidget-next-id)      ;; ID
+       ezbl-xwidget-type           ;; Type
+       name                        ;; Name
+       600                         ;; Width
+       600                         ;; Height
+       )))
+
 (defun ezbl-xwidget-next-id ()
   "Returns the next xwidget id based on the value of `ezbl-xwidget-id-counter'."
   (setq ezbl-xwidget-id-counter (1+ ezbl-xwidget-id-counter)))
+
+(defun ezbl-xwidget-handler ()
+  "Handle an xwidget event (such as when it is initialized."
+  (interactive)
+  (let* ((xwidget-event-type (nth 2 last-input-event))
+         (xwidget-id (nth 1 last-input-event)))
+    (cond
+     ((eq xwidget-event-type 'xembed-ready)
+      (let* ((xembed-id (nth 3 last-input-event)))
+        (ezbl-start "name"
+         :socket (number-to-string xembed-id)
+         :config "-"
+         :name "ezbl"))))))
+
 ;;; ezbl.el ends here
