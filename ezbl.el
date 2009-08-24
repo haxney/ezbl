@@ -351,6 +351,9 @@ The following attributes can be used in each alist:
     (caret_browsing . ""))
   "The variables available from Uzbl.")
 
+(defvar ezbl-xwidget-id-counter 0
+  "Counter for xwidget IDs. IDs must be unique, or Emacs will crash.")
+
 (defun ezbl-get-command-args (command)
   "Extracts the arguments (as symbols) from a Uzbl command specification.
 
@@ -564,4 +567,7 @@ See `ezbl-start' for a description of the format of INSTANCE."
         (sleep-for 0 1))
       (match-string 1))))
 
+(defun ezbl-xwidget-next-id ()
+  "Returns the next xwidget id based on the value of `ezbl-xwidget-id-counter'."
+  (setq ezbl-xwidget-id-counter (1+ ezbl-xwidget-id-counter)))
 ;;; ezbl.el ends here
