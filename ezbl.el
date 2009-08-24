@@ -495,7 +495,9 @@ This 'ezbl instance' is used in various other functions.
                                (process . ,proc))
                              instance))
       (with-current-buffer buffer-name
-        (set (make-local-variable 'ezbl-instance) instance)))))
+        (set (make-local-variable 'ezbl-instance) instance))
+
+      (add-to-list 'ezbl-instances `(,(intern name) . ,instance)))))
 
 (defun ezbl-get-instance (instance-or-buffer)
   "Returns the ezbl instance from INSTANCE-OR-BUFFER.
