@@ -1,6 +1,9 @@
 Ezbl - Emacs interface for Uzbl (uzbl.org)
 
-This package creates an Emacs interface for Uzbl, allowing you to control uzbl
+This package creates an Emacs interface for Uzbl, allowing you to control Uzbl
 from within Emacs.
+
+It requires Uzbl (www.uzbl.org), as well as a patched version of Emacs which
+supports embedding xwidgets, available at http://github.com/jave/emacs/tree/xembed
 
 Copyright 2009, Daniel Hackney

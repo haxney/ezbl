@@ -2,6 +2,8 @@
 ;;
 ;; Author: Daniel Hackney
 ;; Copyright (C) 2009 Daniel Hackney
+;; Version: 0.1
+;; URL: http://github.com/dhax/ezbl/tree/master
 
 ;; This file is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
