@@ -354,6 +354,9 @@ The following attributes can be used in each alist:
 (defvar ezbl-xwidget-id-counter 0
   "Counter for xwidget IDs. IDs must be unique, or Emacs will crash.")
 
+(defconst ezbl-xwidget-type 3
+  "The type attribute for xwidget embedded widgets.")
+
 (defun ezbl-get-command-args (command)
   "Extracts the arguments (as symbols) from a Uzbl command specification.
 
@@ -567,6 +570,22 @@ See `ezbl-start' for a description of the format of INSTANCE."
         (sleep-for 0 1))
       (match-string 1))))
 
+(defun ezbl-xwidget-insert (where id type title width height)
+  "Insert an embedded widget.into the current buffer.
+
+WHERE - The point at which to insert the widget.
+ID - The id of the widget. MUST be unique and < 100!
+TYPE - 1=button, 2=toggle btn, 3=xembed socket(id will be printed to stdout)
+TITLE - The title of the embedded widget
+WIDTH - The width of the widget
+HEIGHT - The height of the widget"
+  (save-excursion
+    (goto-char where)
+    (put-text-property
+     (point)
+     (1+ (point))
+     'display
+     (list 'xwidget ':xwidget-id id ':type type ':title title ':width width ':height height))))
 (defun ezbl-xwidget-next-id ()
   "Returns the next xwidget id based on the value of `ezbl-xwidget-id-counter'."
   (setq ezbl-xwidget-id-counter (1+ ezbl-xwidget-id-counter)))
