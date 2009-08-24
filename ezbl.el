@@ -297,7 +297,7 @@ The following attributes can be used in each alist:
   '((uri . "(callback: load the uri)")
     (verbose . "affects output on stdout")
     (mode . "insert or command mode")
-    (inject_html . "   * base_url: used when passing html through stdin")
+    (inject_html . "base_url: used when passing html through stdin")
     (html_endmarker . "delimiter when passing html through stdin")
     (html_mode_timeout . "consider end of html input after x seconds when no endmarker found")
     (keycmd . "holds the input buffer (callback: update input buffer)")
