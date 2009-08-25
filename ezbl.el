@@ -628,4 +628,24 @@ HEIGHT - The height of the widget"
          :name (cdr (assq 'name ezbl-instance)))
         (run-hooks 'ezbl-xembed-ready-hook))))))
 
+(defun ezbl-open (uri)
+  "Create a new instance in its own buffer and browse to URI."
+  (interactive "sUri: ")
+  (when (not (fboundp 'ezbl-command-uri))
+    (ezbl-init-commands))
+  (switch-to-buffer (get-buffer-create uri))
+
+  ;; Currently has problems embedding into an empty buffer, so insert it between
+  ;; two spaces.
+  (insert "  ")
+  (backward-char)
+
+  (ezbl-embed uri)
+  ;; Set the URI using a local hook.
+  (add-hook 'ezbl-xembed-ready-hook
+            `(lambda ()
+               (ezbl-command-uri ,uri ,uri))
+            nil
+            t))
+
 ;;; ezbl.el ends here
