@@ -504,6 +504,7 @@ This 'ezbl instance' is used in various other functions.
                              instance))
       (with-current-buffer buffer-name
         (set (make-local-variable 'ezbl-instance) instance))
+      (set (make-local-variable 'ezbl-instance) instance)
 
       (add-to-list 'ezbl-instances `(,(intern name) . ,instance)))))
 
