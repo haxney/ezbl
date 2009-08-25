@@ -594,14 +594,16 @@ HEIGHT - The height of the widget"
   (save-excursion
     (use-local-map (make-sparse-keymap))
     (define-key (current-local-map) [(xwidget-event)] 'ezbl-xwidget-handler)
-      (ezbl-xwidget-insert
-       (point)                     ;; Where
-       (ezbl-xwidget-next-id)      ;; ID
-       ezbl-xwidget-type           ;; Type
-       name                        ;; Name
-       600                         ;; Width
-       600                         ;; Height
-       )))
+    (ezbl-xwidget-insert
+     (point)                     ;; Where
+     (ezbl-xwidget-next-id)      ;; ID
+     ezbl-xwidget-type           ;; Type
+     name                        ;; Name
+     600                         ;; Width
+     600)                        ;; Height
+
+    ;; Set a basic instance containing only the name
+    (set (make-local-variable 'ezbl-instance) `((name . ,name)))))
 
 (defun ezbl-xwidget-next-id ()
   "Returns the next xwidget id based on the value of `ezbl-xwidget-id-counter'."
@@ -615,9 +617,9 @@ HEIGHT - The height of the widget"
     (cond
      ((eq xwidget-event-type 'xembed-ready)
       (let* ((xembed-id (nth 3 last-input-event)))
-        (ezbl-start "name"
+        (ezbl-start (cdr (assq 'name ezbl-instance))
          :socket (number-to-string xembed-id)
-         :config "-"
-         :name "ezbl"))))))
+         :config "-" ;; Use stdin for config
+         :name (cdr (assq 'name ezbl-instance))))))))
 
 ;;; ezbl.el ends here
