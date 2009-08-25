@@ -172,7 +172,7 @@ or percentage (55%).
      (format . "toggle_status")
      (doc . ""))
     ((name . "spawn")
-     (format . "spawn <executable> <additonal args>")
+     (format . "spawn <executable> <additonal_args>")
      (doc . "Runs a command.
 
 * See the \"external scripts\" section of the Uzbl readme for
@@ -196,7 +196,7 @@ or percentage (55%).
   are appended at the end, so the argument numbers will be
   higher."))
     ((name . "sync_spawn")
-     (format . "sync_spawn <executable> <additional args>")
+     (format . "sync_spawn <executable> <additional_args>")
      (doc . "Tell Uzbl to synchronously spawn a command.
 
 See `ezbl-command-spawn' for details.
@@ -236,7 +236,7 @@ See `ezbl-command-sh' for details.
 * search with no string will search for the next/previous
   occurrence of the string previously searched for."))
     ((name . "toggle_insert_mode")
-     (format . "toggle_insert_mode <optional state>")
+     (format . "toggle_insert_mode <optional_state>")
      (doc . "Set the insert mode to OPTIONAL_STATE.
 
 If the optional state is 0, disable insert mode. If 1, enable
@@ -267,7 +267,7 @@ load the said url if you have a binding like \"bind o _ = uri %s\"."))
      (format . "keycmd_bs")
      (doc . "Erase (backspace) one character from the command buffer."))
     ((name . "chain")
-     (format . "chain <command> <command>")
+     (format . "chain <command> <command2>")
      (doc . "Use for chaining multiple commands.
 
 * remember to quote the commands; one command must come as one
