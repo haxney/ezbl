@@ -447,6 +447,7 @@ Returns an ezbl instance alist of the form:
 
   ((arguments . (\"--option1\" \"value\" \"--switch\"))
    (process . #<process ezbl-name>)
+   (pid . process_id)
    (name . NAME)
    (buffer . \"*ezbl-name*\")
    (proc-name . \"ezbl-name\"))
@@ -504,7 +505,8 @@ This 'ezbl instance' is used in various other functions.
                                       ezbl-exec-path)
                                 program-args))))
       (setq instance (append `((arguments . ,program-args)
-                               (process . ,proc))
+                               (process . ,proc)
+                               (pid . ,(process-id proc)))
                              instance))
       (with-current-buffer buffer-name
         (set (make-local-variable 'ezbl-instance) instance))
