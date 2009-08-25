@@ -359,6 +359,10 @@ The following attributes can be used in each alist:
 (defconst ezbl-xwidget-type 3
   "The type attribute for xwidget embedded widgets.")
 
+(defvar ezbl-xembed-ready-hook nil
+  "Commands to run when an ezbl instance receives the
+`xembed-ready' signal.")
+
 (defun ezbl-get-command-args (command)
   "Extracts the arguments (as symbols) from a Uzbl command specification.
 
@@ -621,6 +625,7 @@ HEIGHT - The height of the widget"
         (ezbl-start (cdr (assq 'name ezbl-instance))
          :socket (number-to-string xembed-id)
          :config "-" ;; Use stdin for config
-         :name (cdr (assq 'name ezbl-instance))))))))
+         :name (cdr (assq 'name ezbl-instance)))
+        (run-hooks 'ezbl-xembed-ready-hook))))))
 
 ;;; ezbl.el ends here
