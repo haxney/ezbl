@@ -701,15 +701,27 @@ The script specific arguments are this:
           www.foo.com/somepage, this could be something else than
           foo, eg advertising from another host)
       $11 request address path $12 cookie (only with PUT requests)"
-  (let ((config-file (nth 0 args))
-        (pid (nth 1 args))
-        (window-id (nth 2 args))
-        (fifo-filename (nth 3 args))
-        (socket-filename (nth 4 args))
-        (current-url (nth 5 args))
-        (current-title (nth 6 args)))
-    (message (format "title: %s" current-title)))
-  )
+  (let* ((config-file (nth 0 args))
+         (pid (string-to-int (nth 1 args)))
+         (window-id (nth 2 args))
+         (fifo-filename (nth 3 args))
+         (socket-filename (nth 4 args))
+         (current-url (nth 5 args))
+         (current-title (nth 6 args))
+         (instance (ezbl-get-instance pid))
+         (buffer (cdr (assq 'buffer instance))))
+    (with-current-buffer buffer
+      (cond
+       ((equal type "load_finish")
+        (rename-buffer current-title))
+       ((equal type "load_start"))
+       ((equal type "load_commit"))
+       ((equal type "history"))
+       ((equal type "download"))
+       ((equal type "cookie"))
+       ((equal type "new_window"))
+       (t
+        (error (format "Unknown callback type '%s' received." type)))))))
 
 (provide 'ezbl)
 
