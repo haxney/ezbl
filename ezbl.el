@@ -735,6 +735,16 @@ The script specific arguments are this:
        (t
         (error (format "Unknown callback type '%s' received." type)))))))
 
+(defun ezbl-init-handlers (inst)
+  "Initialize the Uzbl external script handlers.
+
+INST is a valid input to `ezbl-get-instance'.
+
+Sets the server-name parameter to the current value of `server-name'."
+  (mapc '(lambda (type)
+          (ezbl-command-set inst type (format "spawn %s %s %s" ezbl-handler-path type server-name)))
+        ezbl-handlers))
+
 (provide 'ezbl)
 
 ;;; ezbl.el ends here
