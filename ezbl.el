@@ -452,14 +452,14 @@ Returns an ezbl instance alist of the form:
    (process . #<process ezbl-name>)
    (pid . process_id)
    (name . NAME)
-   (buffer . \"*ezbl-name*\")
+   (buffer . #<buffer ezbl-name>)
    (proc-name . \"ezbl-name\"))
 
 This 'ezbl instance' is used in various other functions.
 "
   (let ((program-args nil)
         (instance `((name . ,name)
-                    (buffer . ,(format ezbl-buffer-format name))
+                    (buffer . ,(current-buffer))
                     (proc-name . ,(concat "ezbl-" name)))))
     ;; Process keywords
     (while args
