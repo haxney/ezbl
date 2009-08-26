@@ -356,6 +356,18 @@ The following attributes can be used in each alist:
     (caret_browsing . ""))
   "The variables available from Uzbl.")
 
+(defconst ezbl-handlers '("load_finish_handler"
+                          "load_start_handler"
+                          "load_commit_handler"
+                          "history_handler"
+                          "download_handler"
+                          "cookie_handler"
+                          "new_window")
+  "A list of the Uzbl handler variables.")
+
+(defvar ezbl-handler-path (locate-library "handler.py" t)
+  "The path of the Uzbl callback handler.")
+
 (defvar ezbl-xwidget-id-counter 0
   "Counter for xwidget IDs. IDs must be unique, or Emacs will crash.")
 
@@ -663,12 +675,12 @@ HEIGHT - The height of the widget"
   "The handler for all Uzbl handler functions.
 
 TYPE must be one of:
-  - \"load_finish\"
-  - \"load_start\"
-  - \"load_commit\"
-  - \"history\"
-  - \"download\"
-  - \"cookie\"
+  - \"load_finish_handler\"
+  - \"load_start_handler\"
+  - \"load_commit_handler\"
+  - \"history_handler\"
+  - \"download_handler\"
+  - \"cookie_handler\"
   - \"new_window\"
 
 The remaining arguments ARGS are specified by the \"EXTERNAL
@@ -712,13 +724,13 @@ The script specific arguments are this:
          (buffer (cdr (assq 'buffer instance))))
     (with-current-buffer buffer
       (cond
-       ((equal type "load_finish")
+       ((equal type "load_finish_handler")
         (rename-buffer current-title))
-       ((equal type "load_start"))
-       ((equal type "load_commit"))
-       ((equal type "history"))
-       ((equal type "download"))
-       ((equal type "cookie"))
+       ((equal type "load_start_handler"))
+       ((equal type "load_commit_handler"))
+       ((equal type "history_handler"))
+       ((equal type "download_handler"))
+       ((equal type "cookie_handler"))
        ((equal type "new_window"))
        (t
         (error (format "Unknown callback type '%s' received." type)))))))

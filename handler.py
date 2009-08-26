@@ -11,12 +11,12 @@ This script must be called as follows:
 
 Where "[...]" indicates the optional additional Uzbl arguments (such as when the
 cookie handler script is called). "handler-type" is one of:
-  - "load_finish"
-  - "load_start"
-  - "load_commit"
-  - "history"
-  - "download"
-  - "cookie"
+  - "load_finish_handler"
+  - "load_start_handler"
+  - "load_commit_handler"
+  - "history_handler"
+  - "download_handler"
+  - "cookie_handler"
   - "new_window"
 
 and "server-name" is the value of the variable "server-name" in the Emacs
