@@ -23,6 +23,9 @@
 ;;  Uzbl version 2009.07.18 or greater is required. It has not been tested with
 ;;  other versions.
 
+(eval-when-compile
+  (require 'cl))
+
 (defgroup ezbl nil "Settings for Ezbl, the Emacs frontend for Uzbl.")
 
 (defcustom ezbl-exec-path "/usr/bin/uzbl"
@@ -519,7 +522,8 @@ This 'ezbl instance' is used in various other functions.
 
 If INSTANCE-OR-BUFFER is an ezbl instance, then it is returned
 unchanged. If it is a buffer, then the local variable of
-`ezbl-instance' is returned.
+`ezbl-instance' is returned. If it is an integer, then
+`ezbl-instances' is searched for an instance with a matching pid.
 
 Returns an ezbl instance, or `nil' if none was found."
   (let ((instance
@@ -531,6 +535,11 @@ Returns an ezbl instance, or `nil' if none was found."
           ((bufferp instance-or-buffer)
            (with-current-buffer instance-or-buffer
              ezbl-instance))
+          ;; Is a pid.
+          ((integerp instance-or-buffer)
+           (find instance-or-buffer
+                 ezbl-instances :key '(lambda (item)
+                                        (cdr (assq 'pid (cdr item))))))
           ;; Is the name of a buffer.
           ((stringp instance-or-buffer)
            (if (and (bufferp (get-buffer instance-or-buffer))
