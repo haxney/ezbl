@@ -711,4 +711,6 @@ The script specific arguments are this:
     (message (format "title: %s" current-title)))
   )
 
+(provide 'ezbl)
+
 ;;; ezbl.el ends here
