@@ -650,4 +650,56 @@ HEIGHT - The height of the widget"
             nil
             t))
 
+(defun ezbl-callback (type &rest args)
+  "The handler for all Uzbl handler functions.
+
+TYPE must be one of:
+  - \"load_finish\"
+  - \"load_start\"
+  - \"load_commit\"
+  - \"history\"
+  - \"download\"
+  - \"cookie\"
+  - \"new_window\"
+
+The remaining arguments ARGS are specified by the \"EXTERNAL
+SCRIPTS\" section of the Uzbl readme, and are as follows:
+
+Handler scripts that are called by uzbl are passed the following
+arguments:
+
+$1 uzbl-config-file
+$2 uzbl-pid
+$3 uzbl-x-window-id
+$4 uzbl_fifo-filename
+$5 uzbl_socket-filename
+$6 current page url
+$7 current page title
+.. [ script specific ] (optional)
+
+The script specific arguments are this:
+
+  - history:
+      $8 date of visit (Y-m-d H:i:s localtime)
+  - add bookmark:
+      none
+  - download:
+      $8 url of item to download
+  - cookie handler
+      $8 GET/PUT
+      $9 request address scheme (e.g. http or https)
+      $10 request address host (if current page url is
+          www.foo.com/somepage, this could be something else than
+          foo, eg advertising from another host)
+      $11 request address path $12 cookie (only with PUT requests)"
+  (let ((config-file (nth 0 args))
+        (pid (nth 1 args))
+        (window-id (nth 2 args))
+        (fifo-filename (nth 3 args))
+        (socket-filename (nth 4 args))
+        (current-url (nth 5 args))
+        (current-title (nth 6 args)))
+    (message (format "title: %s" current-title)))
+  )
+
 ;;; ezbl.el ends here
