@@ -38,8 +38,8 @@
 
 Has the format:
 
-  ((name  . instance)
-   (name2 . instance2))
+  ((pid  . instance)
+   (pid2 . instance2))
 
 See `ezbl-start' for a description of the format of the instance
 variable.")
@@ -421,13 +421,9 @@ each one."
   (interactive)
   (mapcar 'ezbl-make-command-func ezbl-commands))
 
-(defun ezbl-start (name &rest args)
+(defun ezbl-start (&rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
 options and values to pass to the Uzbl instance.
-
-NAME is the base from which to form the process and buffer
-names. If NAME is '1234', then the process 'uzbl-1234' and buffer
-'*uzbl-1234*' would be created.
 
 The following keywords are used:
 
@@ -470,9 +466,7 @@ Returns an ezbl instance alist of the form:
 This 'ezbl instance' is used in various other functions.
 "
   (let ((program-args nil)
-        (instance `((name . ,name)
-                    (buffer . ,(current-buffer))
-                    (proc-name . ,(concat "ezbl-" name)))))
+        (instance `((display-buffer . ,(current-buffer)))))
     ;; Process keywords
     (while args
       (let ((arg (car args)))
@@ -512,22 +506,29 @@ This 'ezbl instance' is used in various other functions.
             (setq program-args (append program-args (list "--display") (list value))))))))
 
     ;; Start process
-    (let* ((proc-name (cdr (assq 'proc-name instance)))
-           (buffer-name (cdr (assq 'buffer instance)))
+    (let* ((proc-name "ezbl-process")
+           (output-buffer (generate-new-buffer "*ezbl-output*"))
            (proc (apply 'start-process
                         (append (list proc-name
-                                      buffer-name
+                                      output-buffer
                                       ezbl-exec-path)
-                                program-args))))
+                                program-args)))
+           (pid (process-id proc)))
+      (with-current-buffer output-buffer
+        (rename-buffer (format ezbl-buffer-format (int-to-string pid))))
+
       (setq instance (append `((arguments . ,program-args)
                                (process . ,proc)
-                               (pid . ,(process-id proc)))
+                               (pid . ,pid)
+                               (output-buffer . ,output-buffer))
                              instance))
-      (with-current-buffer buffer-name
+
+      (with-current-buffer output-buffer
         (set (make-local-variable 'ezbl-instance) instance))
       (set (make-local-variable 'ezbl-instance) instance)
 
-      (add-to-list 'ezbl-instances `(,(intern name) . ,instance)))))
+      (add-to-list 'ezbl-instances `(,pid . ,instance))
+      instance)))
 
 (defun ezbl-get-instance (instance-or-buffer)
   "Returns the ezbl instance from INSTANCE-OR-BUFFER.
@@ -549,9 +550,8 @@ Returns an ezbl instance, or `nil' if none was found."
              ezbl-instance))
           ;; Is a pid.
           ((integerp instance-or-buffer)
-           (find instance-or-buffer
-                 ezbl-instances :key '(lambda (item)
-                                        (cdr (assq 'pid (cdr item))))))
+           (cdr (assq instance-or-buffer
+                       ezbl-instances)))
           ;; Is the name of a buffer.
           ((stringp instance-or-buffer)
            (if (and (bufferp (get-buffer instance-or-buffer))
@@ -563,7 +563,7 @@ Returns an ezbl instance, or `nil' if none was found."
              (with-current-buffer (format ezbl-buffer-format instance-or-buffer)
                ezbl-instance))))))
     (when (null instance)
-      (error (concat instance-or-buffer " is not an Ezbl instance or an Ezbl buffer.")))
+      (error (concat (prin1-to-string instance-or-buffer) " is not an Ezbl instance or an Ezbl buffer.")))
     instance))
 
 (defun ezbl-exec-command (instance-or-buffer command)
@@ -588,7 +588,7 @@ See `ezbl-start' for a description of the format of INSTANCE."
   "Return the value of VAR from the ezbl instance INSTANCE-OR-BUFFER."
   (let ((instance (ezbl-get-instance instance-or-buffer))
         (tag (sha1 (int-to-string (random)))))
-    (with-current-buffer (cdr (assq 'buffer instance))
+    (with-current-buffer (cdr (assq 'output-buffer instance))
       (ezbl-command-print instance
                           (format "ezbl-tag(%s){@%s}" tag var))
       (goto-char (point-max))
@@ -617,8 +617,8 @@ HEIGHT - The height of the widget"
      'display
      (list 'xwidget ':xwidget-id id ':type type ':title title ':width width ':height height))))
 
-(defun ezbl-embed (name)
-  "Embed the Uzbl window specified by INSTANCE in its buffer."
+(defun ezbl-embed ()
+  "Embed the Uzbl window specified by NAME in its buffer."
   (save-excursion
     (use-local-map (make-sparse-keymap))
     (define-key (current-local-map) [(xwidget-event)] 'ezbl-xwidget-handler)
@@ -626,12 +626,9 @@ HEIGHT - The height of the widget"
      (point)                     ;; Where
      (ezbl-xwidget-next-id)      ;; ID
      ezbl-xwidget-type           ;; Type
-     name                        ;; Name
+     "ezbl"                      ;; Name
      600                         ;; Width
-     600)                        ;; Height
-
-    ;; Set a basic instance containing only the name
-    (set (make-local-variable 'ezbl-instance) `((name . ,name)))))
+     600)))                      ;; Height
 
 (defun ezbl-xwidget-next-id ()
   "Returns the next xwidget id based on the value of `ezbl-xwidget-id-counter'."
@@ -645,10 +642,8 @@ HEIGHT - The height of the widget"
     (cond
      ((eq xwidget-event-type 'xembed-ready)
       (let* ((xembed-id (nth 3 last-input-event)))
-        (ezbl-start (cdr (assq 'name ezbl-instance))
-         :socket (number-to-string xembed-id)
-         :config "-" ;; Use stdin for config
-         :name (cdr (assq 'name ezbl-instance)))
+        (ezbl-start :socket (number-to-string xembed-id)
+                    :config "-") ;; Use stdin for config
         (run-hooks 'ezbl-xembed-ready-hook))))))
 
 (defun ezbl-open (uri)
@@ -663,11 +658,11 @@ HEIGHT - The height of the widget"
   (insert "  ")
   (backward-char)
 
-  (ezbl-embed uri)
+  (ezbl-embed)
   ;; Set the URI using a local hook.
   (add-hook 'ezbl-xembed-ready-hook
             `(lambda ()
-               (ezbl-command-uri ,uri ,uri))
+               (ezbl-command-uri ezbl-instance ,uri))
             nil
             t))
 
@@ -721,7 +716,7 @@ The script specific arguments are this:
          (current-url (nth 5 args))
          (current-title (nth 6 args))
          (instance (ezbl-get-instance pid))
-         (buffer (cdr (assq 'buffer instance))))
+         (buffer (cdr (assq 'display-buffer instance))))
     (with-current-buffer buffer
       (cond
        ((equal type "load_finish_handler")
