@@ -737,7 +737,7 @@ INST is a valid input to `ezbl-get-instance'.
 
 Sets the server-name parameter to the current value of `server-name'."
   (mapc '(lambda (type)
-          (ezbl-command-set inst type (format "spawn %s %s %s" ezbl-handler-path type server-name)))
+           (ezbl-command-set inst type (format "spawn %s %s %s" ezbl-handler-path type server-name)))
         ezbl-handlers))
 
 (provide 'ezbl)
