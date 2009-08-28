@@ -664,7 +664,8 @@ HEIGHT - The height of the widget"
             `(lambda ()
                (ezbl-command-uri ezbl-instance ,uri))
             nil
-            t))
+            t)
+  (current-buffer))
 
 (defun ezbl-callback (type &rest args)
   "The handler for all Uzbl handler functions.
