@@ -651,7 +651,7 @@ HEIGHT - The height of the widget"
   (interactive "sUri: ")
   (when (not (fboundp 'ezbl-command-uri))
     (ezbl-init-commands))
-  (switch-to-buffer (get-buffer-create uri))
+  (switch-to-buffer (generate-new-buffer uri))
 
   ;; Currently has problems embedding into an empty buffer, so insert it between
   ;; two spaces.
