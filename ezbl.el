@@ -664,6 +664,11 @@ HEIGHT - The height of the widget"
   (backward-char)
 
   (ezbl-embed)
+  (add-hook 'ezbl-xembed-ready-hook
+            '(lambda ()
+               (ezbl-init-handlers ezbl-instance))
+            nil
+            t)
   ;; Set the URI using a local hook.
   (add-hook 'ezbl-xembed-ready-hook
             `(lambda ()
