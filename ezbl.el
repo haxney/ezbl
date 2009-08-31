@@ -742,6 +742,8 @@ The script specific arguments are this:
 INST is a valid input to `ezbl-get-instance'.
 
 Sets the server-name parameter to the current value of `server-name'."
+  (when (null ezbl-handler-path)
+    (error "`ezbl-handler-path' is null, so \"handler.py\" could not be located.."))
   (mapc '(lambda (type)
            (ezbl-command-set inst type (format "spawn %s %s %s" ezbl-handler-path type server-name)))
         ezbl-handlers))
