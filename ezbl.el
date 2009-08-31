@@ -530,15 +530,20 @@ This 'ezbl instance' is used in various other functions.
       (add-to-list 'ezbl-instances `(,pid . ,instance))
       instance)))
 
-(defun ezbl-get-instance (instance-or-buffer)
+(defun ezbl-get-instance (&optional instance-or-buffer)
   "Returns the ezbl instance from INSTANCE-OR-BUFFER.
 
 If INSTANCE-OR-BUFFER is an ezbl instance, then it is returned
 unchanged. If it is a buffer, then the local variable of
 `ezbl-instance' is returned. If it is an integer, then
-`ezbl-instances' is searched for an instance with a matching pid.
+`ezbl-instances' is searched for an instance with a matching
+pid. If it is nil or not supplied, then the value of
+`ezbl-instance' in the current buffer is returned.
 
 Returns an ezbl instance, or `nil' if none was found."
+  (when (null instance-or-buffer)
+    (set 'instance-or-buffer ezbl-instance))
+
   (let ((instance
          (cond
           ;; Is an instance.
@@ -665,8 +670,7 @@ HEIGHT - The height of the widget"
 
   (ezbl-embed)
   (add-hook 'ezbl-xembed-ready-hook
-            '(lambda ()
-               (ezbl-init-handlers ezbl-instance))
+            'ezbl-init-handlers
             nil
             t)
   ;; Set the URI using a local hook.
@@ -741,7 +745,7 @@ The script specific arguments are this:
        (t
         (error (format "Unknown callback type '%s' received." type)))))))
 
-(defun ezbl-init-handlers (inst)
+(defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
 
 INST is a valid input to `ezbl-get-instance'.
