@@ -649,6 +649,11 @@ HEIGHT - The height of the widget"
 (defun ezbl-open (uri)
   "Create a new instance in its own buffer and browse to URI."
   (interactive "sUri: ")
+  (when (or (not (boundp 'server-name)) (null server-name))
+    (error "Emacs server is required for Ezbl, but `server-name' is nil."))
+  (when (null server-process)
+    (error "Emacs server is required for Ezbl, but the server is not started."))
+
   (when (not (fboundp 'ezbl-command-uri))
     (ezbl-init-commands))
   (switch-to-buffer (generate-new-buffer uri))
