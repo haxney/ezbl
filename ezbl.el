@@ -365,7 +365,7 @@ The following attributes can be used in each alist:
                           "new_window")
   "A list of the Uzbl handler variables.")
 
-(defvar ezbl-handler-path (locate-library "handler.py" t)
+(defvar ezbl-handler-path (concat (file-name-directory load-file-name) "handler.py")
   "The path of the Uzbl callback handler.")
 
 (defvar ezbl-xwidget-id-counter 0
