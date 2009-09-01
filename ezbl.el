@@ -629,6 +629,11 @@ for more info):
   "Return the value of VAR from the ezbl instance INST."
   (ezbl-sync-request inst (concat "@" var)))
 
+(defun ezbl-run-js (inst js)
+  "Execute the Javascript in JS on the Uzbl instance INST and
+return the result."
+  (ezbl-sync-request inst (concat "@<" js ">@")))
+
 (defun ezbl-xwidget-insert (where id type title width height)
   "Insert an embedded widget.into the current buffer.
 
