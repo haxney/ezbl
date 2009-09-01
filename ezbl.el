@@ -786,6 +786,44 @@ Sets the server-name parameter to the current value of `server-name'."
            (ezbl-command-set inst type (format "spawn %s %s %s" ezbl-handler-path type server-name)))
         ezbl-handlers))
 
+(defun ezbl-update-mode-line-format ()
+  "Updates the mode-line format in each ezbl display-window
+  according to `ezbl-mode-line-format'."
+  (mapc '(lambda (inst)
+           (let ((buffer (cdr (assq 'display-buffer (cdr inst)))))
+             (with-current-buffer buffer
+               (setq mode-line-format ezbl-mode-line-format))))
+        ezbl-instances))
+
+(defun ezbl-set-mode-line-format (symbol value)
+  "Used for setting `ezbl-mode-line-format'; sets SYMBOL's value
+  to VALUE and runs `ezbl-update-mode-line-format'."
+  (set-default symbol value)
+  (ezbl-update-mode-line-format))
+
+(defcustom ezbl-mode-line-format
+  (list "-"
+        'mode-line-mule-info
+        'mode-line-modified
+        'mode-line-frame-identification
+        '(:eval (ezbl-run-js ezbl-instance "document.title"))
+        "--"
+          '(:eval (ezbl-get-variable ezbl-instance "uri"))
+        "   "
+        'global-mode-string
+        "   %[("
+        '(:eval (mode-line-mode-name))
+        'mode-line-process
+        'minor-mode-alist
+        "%n"
+        ")%]--"
+        '(which-func-mode ("" which-func-format "--"))
+        "-%-")
+  "The format of the mode line in an Ezbl display buffer."
+  :group 'ezbl
+  :type 'sexp
+  :set 'ezbl-set-mode-line-format)
+
 (provide 'ezbl)
 
 ;;; ezbl.el ends here
