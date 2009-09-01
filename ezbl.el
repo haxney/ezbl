@@ -611,10 +611,11 @@ for more info):
             current page and returns the result.
 
   @[xml]@: Escapes any XML in the brackets."
-  (let ((tag (sha1 (int-to-string (random)))))
+  (let ((instance (ezbl-get-instance inst))
+        (tag (sha1 (int-to-string (random)))))
     (with-current-buffer (cdr (assq 'output-buffer instance))
-      (ezbl-command-print inst
-                          (format "%s{%s}%s" tag var tag))
+      (ezbl-command-print instance
+                          (format "%s{%s}%s" tag req tag))
       (goto-char (point-max))
       ;; Keep trying until tag is found. TODO: avoid searching backwards through
       ;; the whole buffer.
