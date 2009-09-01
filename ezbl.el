@@ -763,8 +763,7 @@ The script specific arguments are this:
          (buffer (cdr (assq 'display-buffer instance))))
     (with-current-buffer buffer
       (cond
-       ((equal type "load_finish_handler")
-        (rename-buffer current-title))
+       ((equal type "load_finish_handler"))
        ((equal type "load_start_handler"))
        ((equal type "load_commit_handler"))
        ((equal type "history_handler"))
@@ -806,9 +805,10 @@ Sets the server-name parameter to the current value of `server-name'."
         'mode-line-mule-info
         'mode-line-modified
         'mode-line-frame-identification
-        '(:eval (ezbl-run-js ezbl-instance "document.title"))
+        '(:eval (ignore (rename-buffer (ezbl-run-js ezbl-instance "document.title"))))
+        "%b"
         "--"
-          '(:eval (ezbl-get-variable ezbl-instance "uri"))
+        '(:eval (ezbl-get-variable ezbl-instance "uri"))
         "   "
         'global-mode-string
         "   %[("
