@@ -559,58 +559,61 @@ This 'ezbl instance' is used in various other functions."
      ;; Return INST if the block exited normally (not using `return-from').
      inst)))
 
-  "Returns the ezbl instance from INSTANCE-OR-BUFFER.
-(defun ezbl-get-instance (&optional instance-or-buffer strict)
+(defun ezbl-get-instance (&optional inst strict)
+  "Returns the ezbl instance from INST.
 
-If INSTANCE-OR-BUFFER is an ezbl instance, then it is returned
-unchanged. If it is a buffer, then the local variable of
-`ezbl-instance' is returned. If it is an integer, then
-`ezbl-instances' is searched for an instance with a matching
-pid. If it is nil or not supplied, then the value of
-`ezbl-instance' in the current buffer is returned.
+If INST is an ezbl instance, then it is returned unchanged. If it
+is a buffer, then the local variable of `ezbl-instance' is
+returned. If it is an integer, then `ezbl-instances' is searched
+for an instance with a matching pid. If it is nil or not
+supplied, then the value of `ezbl-instance' in the current buffer
+is returned.
 
-Returns an ezbl instance, or `nil' if none was found."
-  (when (null instance-or-buffer)
-    (set 'instance-or-buffer ezbl-instance))
+If STRICT is non-nil, raise an error if INST is not resolvable to
+an instance.
+
+Returns an ezbl-instance."
+  (when (null inst)
+    (set 'inst ezbl-instance))
 
   (let ((instance
          (cond
           ;; Is an instance.
-          ((ezbl-instance-p instance-or-buffer))
+          ((ezbl-instance-p inst))
           ;; Is a buffer.
-          ((bufferp instance-or-buffer)
-           (with-current-buffer instance-or-buffer
+          ((bufferp inst)
+           (with-current-buffer inst
              ezbl-instance))
           ;; Is a pid.
-          ((integerp instance-or-buffer)
-           (cdr (assq instance-or-buffer
-                       ezbl-instances)))
+          ((integerp inst)
+           (cdr (assq inst
+                      ezbl-instances)))
           ;; Is the name of a buffer.
-          ((stringp instance-or-buffer)
-           (if (and (bufferp (get-buffer instance-or-buffer))
-                    (not (null (with-current-buffer instance-or-buffer
+          ((stringp inst)
+           (if (and (bufferp (get-buffer inst))
+                    (not (null (with-current-buffer inst
                                  ezbl-instance))))
-               (with-current-buffer instance-or-buffer
+               (with-current-buffer inst
                  ezbl-instance)
              ;; Is the name of an instance, so open the output buffer named "*ezbl-name*"
-             (with-current-buffer (format ezbl-output-buffer-format instance-or-buffer)
+             (with-current-buffer (format ezbl-output-buffer-format inst)
                ezbl-instance))))))
     (when (and strict
                (not (ezbl-instance-p instance)))
-      (error (format "`%s' is not an Ezbl instance or an Ezbl buffer." instance-or-buffer)))
+      (error (format "`%s' is not an Ezbl instance or an Ezbl buffer." inst)))
     (ezbl-instance-p instance)))
 
-(defun ezbl-exec-command (instance-or-buffer command)
-  "Sends the string COMMAND to the Uzbl instance INSTANCE-OR-BUFFER.
+(defun ezbl-exec-command (inst command)
+  "Sends the string COMMAND to the Uzbl instance INST.
 
-If INSTANCE-OR-BUFFER is a buffer, use the value of
+If INST is a buffer, use the value of
 `ezbl-instance' in that buffer. If
 
 COMMAND is a Uzbl command as described by the Uzbl
 readme (http://www.uzbl.org/readme.php).
 
 See `ezbl-start' for a description of the format of INSTANCE."
-  (let ((instance (ezbl-get-instance instance-or-buffer)))
+  (let ((instance (ezbl-get-instance inst)))
 
 
     ;; Append a newline (\n) to the end of COMMAND if one is not already there.
