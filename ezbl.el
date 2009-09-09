@@ -50,7 +50,11 @@ variable.")
 See `ezbl-start' for a description of the format of this
 variable.")
 
-(defconst ezbl-buffer-format "*ezbl-%s*"
+(defconst ezbl-output-buffer-format "*ezbl-output-%s*"
+  "The format used for transforming ezbl instance names into
+buffer names.")
+
+(defconst ezbl-display-buffer-format "*ezbl-display-%s*"
   "The format used for transforming ezbl instance names into
 buffer names.")
 
@@ -515,7 +519,7 @@ This 'ezbl instance' is used in various other functions.
                                 program-args)))
            (pid (process-id proc)))
       (with-current-buffer output-buffer
-        (rename-buffer (format ezbl-buffer-format (int-to-string pid))))
+        (rename-buffer (format ezbl-output-buffer-format (int-to-string pid))))
 
       (setq instance (append `((arguments . ,program-args)
                                (process . ,proc)
@@ -564,8 +568,8 @@ Returns an ezbl instance, or `nil' if none was found."
                                  ezbl-instance))))
                (with-current-buffer instance-or-buffer
                  ezbl-instance)
-             ;; Is the name of an instance, so open the buffer named "*ezbl-name*"
-             (with-current-buffer (format ezbl-buffer-format instance-or-buffer)
+             ;; Is the name of an instance, so open the output buffer named "*ezbl-name*"
+             (with-current-buffer (format ezbl-output-buffer-format instance-or-buffer)
                ezbl-instance))))))
     (when (null instance)
       (error (concat (prin1-to-string instance-or-buffer) " is not an Ezbl instance or an Ezbl buffer.")))
