@@ -422,16 +422,51 @@ See `ezbl-commands' for a description of the format of SPEC."
     (fset command-name
           `(lambda (instance ,@args)
              ,doc
-             (ezbl-exec-command instance (format ,output-format ,@args))))
-    command-name))
+             (ezbl-exec-command instance (format ,output-format ,@args))))))
+
+(defun ezbl-make-instance-accessor-func (spec)
+  "Creates an accessor function for the given symbol.
+
+If SPEC is a list, the car is used for the key name.
+
+The function will be called `ezbl-instance-<name>', and will take
+the following (optional) arguments:
+
+INST - An object which is resolvable (through
+       `ezbl-get-instance') to an instance.
+
+VALUE - If given and non-nil, sets the value of NAME to NEW-VALUE."
+  (let* ((name (if (listp spec)
+                   (car spec)
+                 spec))
+         (doc (format "Get (or set) the value of %s from INST.
+
+If INST is nil, the value of `ezbl-instance' in the current
+buffer is used. If NEW-VALUE is non-nil, then the value of %s in INST
+is set to NEW-VALUE.
+
+Returns the value of %s in INST, or the new value, if it has been
+set." name name name))
+        (command-name (intern (format "ezbl-instance-%s" name))))
+    (message (format "creating command: %s" command-name))
+    (fset command-name
+          `(lambda (&optional inst new-value)
+             ,doc
+             (let* ((instance (ezbl-get-instance inst t))
+                    (elt (assq (quote ,name) instance)))
+               (if new-value
+                 (setcdr elt new-value)
+                 (cdr elt)))))))
 
 (defun ezbl-init-commands ()
-  "Create Emacs functions from `ezbl-commands'.
+  "Create Emacs functions from `ezbl-commands' and `ezbl-instance-spec'.
 
 Read through `ezbl-commands' and call `ezbl-make-command-func' on
-each one."
+each one. Also, run through `ezbl-instance-spec' and call
+`ezbl-make-instance-accessor-func' on each one."
   (interactive)
-  (mapcar 'ezbl-make-command-func ezbl-commands))
+  (append (mapcar 'ezbl-make-command-func ezbl-commands)
+          (mapcar 'ezbl-make-instance-accessor-func ezbl-instance-spec)))
 
 (defun ezbl-start (&rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
