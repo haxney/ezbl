@@ -816,7 +816,6 @@ Sets the server-name parameter to the current value of `server-name'."
         "   "
         'global-mode-string
         "   %[("
-        '(:eval (mode-line-mode-name))
         'mode-line-process
         'minor-mode-alist
         "%n"
