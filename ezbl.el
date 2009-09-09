@@ -461,14 +461,12 @@ The following keywords are used:
 Returns an ezbl instance alist of the form:
 
   ((arguments . (\"--option1\" \"value\" \"--switch\"))
-   (process . #<process ezbl-name>)
-   (pid . process_id)
-   (name . NAME)
-   (buffer . #<buffer ezbl-name>)
-   (proc-name . \"ezbl-name\"))
+   (process . #<process ezbl-process>)
+   (pid . 16555)
+   (output-buffer . #<buffer  *ezbl-output-16555*>)
+   (display-buffer . #<buffer *ezbl-display-16555*>))
 
-This 'ezbl instance' is used in various other functions.
-"
+This 'ezbl instance' is used in various other functions."
   (let ((program-args nil)
         (instance `((display-buffer . ,(current-buffer)))))
     ;; Process keywords
