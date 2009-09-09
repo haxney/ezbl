@@ -811,8 +811,7 @@ Sets the server-name parameter to the current value of `server-name'."
         'mode-line-mule-info
         'mode-line-modified
         'mode-line-frame-identification
-        '(:eval (ignore (rename-buffer (ezbl-run-js ezbl-instance "document.title"))))
-        "%b"
+        '(:eval (ezbl-run-js ezbl-instance "document.title"))
         "--"
         '(:eval (ezbl-get-variable ezbl-instance "uri"))
         "   "
