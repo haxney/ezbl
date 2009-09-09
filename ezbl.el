@@ -50,6 +50,14 @@ variable.")
 See `ezbl-start' for a description of the format of this
 variable.")
 
+(defvar ezbl-instance-spec
+  '((arguments . cons)
+    (process . process)
+    (pid . integer)
+    (output-buffer . buffer)
+    (display-buffer . buffer))
+  "An alist of required keys and their types in an `ezbl-instance'.")
+
 (defconst ezbl-output-buffer-format " *ezbl-output-%s*"
   "The format used for transforming ezbl instance names into
 buffer names.")
@@ -531,6 +539,25 @@ This 'ezbl instance' is used in various other functions."
 
       (add-to-list 'ezbl-instances `(,pid . ,instance))
       instance)))
+
+(defun ezbl-instance-p (inst)
+  "Return t if INST is an ezbl-instance."
+  (and
+   (consp inst)
+   ;; Check that each element of `ezbl-instance-spec' matches the key and type
+   ;; of an association in INST.
+   (block 'spec-check
+     (mapc '(lambda (spec)
+              (let* ((key-name (car spec))
+                    (expected-type (cdr spec))
+                    (elt (assq key-name inst)))
+                (when (null elt)
+                  (return-from 'spec-check))
+                (when (not (eq expected-type (type-of (cdr elt))))
+                  (return-from 'spec-check))))
+           ezbl-instance-spec)
+     ;; Return INST if the block exited normally (not using `return-from').
+     inst)))
 
 (defun ezbl-get-instance (&optional instance-or-buffer)
   "Returns the ezbl instance from INSTANCE-OR-BUFFER.
