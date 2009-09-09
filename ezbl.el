@@ -420,9 +420,9 @@ See `ezbl-commands' for a description of the format of SPEC."
          (output-format (replace-regexp-in-string "<[[:alnum:]_-]+>" "%s" format))
          (command-name (intern (concat "ezbl-command-" name))))
     (fset command-name
-          `(lambda (instance ,@args)
+          `(lambda (inst ,@args)
              ,doc
-             (ezbl-exec-command instance (format ,output-format ,@args))))))
+             (ezbl-exec-command inst (format ,output-format ,@args))))))
 
 (defun ezbl-make-instance-accessor-func (spec)
   "Creates an accessor function for the given symbol.
