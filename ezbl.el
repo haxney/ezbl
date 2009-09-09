@@ -648,13 +648,10 @@ COMMAND is a Uzbl command as described by the Uzbl
 readme (http://www.uzbl.org/readme.php).
 
 See `ezbl-start' for a description of the format of INSTANCE."
-  (let ((instance (ezbl-get-instance inst)))
-
-
     ;; Append a newline (\n) to the end of COMMAND if one is not already there.
     (when (not (string= "\n" (substring command -1)))
       (setq command (concat command "\n")))
-    (process-send-string (cdr (assq 'process instance)) command)))
+    (process-send-string (ezbl-instance-process inst) command))
 
 (defun ezbl-sync-request (inst req)
   "Request Uzl to evaluate a request string REQ and wait for the result.
@@ -678,10 +675,9 @@ for more info):
             current page and returns the result.
 
   @[xml]@: Escapes any XML in the brackets."
-  (let ((instance (ezbl-get-instance inst))
-        (tag (sha1 (int-to-string (random)))))
-    (with-current-buffer (cdr (assq 'output-buffer instance))
-      (ezbl-command-print instance
+  (let ((tag (sha1 (int-to-string (random)))))
+    (with-current-buffer (ezbl-instance-buffer inst)
+      (ezbl-command-print inst
                           (format "%s{%s}%s" tag req tag))
       (goto-char (point-max))
       ;; Keep trying until tag is found. TODO: avoid searching backwards through
@@ -829,8 +825,7 @@ The script specific arguments are this:
          (socket-filename (nth 4 args))
          (current-url (nth 5 args))
          (current-title (nth 6 args))
-         (instance (ezbl-get-instance pid))
-         (buffer (cdr (assq 'display-buffer instance))))
+         (buffer (ezbl-instance-display pid)))
     (with-current-buffer buffer
       (cond
        ((equal type "load_finish_handler"))
@@ -859,9 +854,8 @@ Sets the server-name parameter to the current value of `server-name'."
   "Updates the mode-line format in each ezbl display-window
   according to `ezbl-mode-line-format'."
   (mapc '(lambda (inst)
-           (let ((buffer (cdr (assq 'display-buffer (cdr inst)))))
-             (with-current-buffer buffer
-               (setq mode-line-format ezbl-mode-line-format))))
+             (with-current-buffer (ezbl-instance-display-buffer (car inst))
+               (setq mode-line-format ezbl-mode-line-format)))
         ezbl-instances))
 
 (defun ezbl-set-mode-line-format (symbol value)
