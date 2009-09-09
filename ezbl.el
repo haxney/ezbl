@@ -635,7 +635,7 @@ Returns an ezbl-instance."
                ezbl-instance))))))
     (when (and strict
                (not (ezbl-instance-p instance)))
-      (error (format "`%s' is not an Ezbl instance or an Ezbl buffer." inst)))
+      (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance." inst)))
     (ezbl-instance-p instance)))
 
 (defun ezbl-exec-command (inst command)
