@@ -576,8 +576,7 @@ Returns an ezbl instance, or `nil' if none was found."
   (let ((instance
          (cond
           ;; Is an instance.
-          ((listp instance-or-buffer)
-           instance-or-buffer)
+          ((ezbl-instance-p instance-or-buffer))
           ;; Is a buffer.
           ((bufferp instance-or-buffer)
            (with-current-buffer instance-or-buffer
