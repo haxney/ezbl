@@ -50,7 +50,7 @@ variable.")
 See `ezbl-start' for a description of the format of this
 variable.")
 
-(defconst ezbl-output-buffer-format "*ezbl-output-%s*"
+(defconst ezbl-output-buffer-format " *ezbl-output-%s*"
   "The format used for transforming ezbl instance names into
 buffer names.")
 
