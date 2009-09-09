@@ -518,8 +518,6 @@ This 'ezbl instance' is used in various other functions.
                                       ezbl-exec-path)
                                 program-args)))
            (pid (process-id proc)))
-      (with-current-buffer output-buffer
-        (rename-buffer (format ezbl-output-buffer-format (int-to-string pid))))
 
       (setq instance (append `((arguments . ,program-args)
                                (process . ,proc)
@@ -528,6 +526,7 @@ This 'ezbl instance' is used in various other functions.
                              instance))
 
       (with-current-buffer output-buffer
+        (rename-buffer (format ezbl-output-buffer-format (int-to-string pid)))
         (set (make-local-variable 'ezbl-instance) instance))
       (set (make-local-variable 'ezbl-instance) instance)
 
