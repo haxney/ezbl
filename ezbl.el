@@ -559,8 +559,8 @@ This 'ezbl instance' is used in various other functions."
      ;; Return INST if the block exited normally (not using `return-from').
      inst)))
 
-(defun ezbl-get-instance (&optional instance-or-buffer)
   "Returns the ezbl instance from INSTANCE-OR-BUFFER.
+(defun ezbl-get-instance (&optional instance-or-buffer strict)
 
 If INSTANCE-OR-BUFFER is an ezbl instance, then it is returned
 unchanged. If it is a buffer, then the local variable of
@@ -595,9 +595,10 @@ Returns an ezbl instance, or `nil' if none was found."
              ;; Is the name of an instance, so open the output buffer named "*ezbl-name*"
              (with-current-buffer (format ezbl-output-buffer-format instance-or-buffer)
                ezbl-instance))))))
-    (when (null instance)
-      (error (concat (prin1-to-string instance-or-buffer) " is not an Ezbl instance or an Ezbl buffer.")))
-    instance))
+    (when (and strict
+               (not (ezbl-instance-p instance)))
+      (error (format "`%s' is not an Ezbl instance or an Ezbl buffer." instance-or-buffer)))
+    (ezbl-instance-p instance)))
 
 (defun ezbl-exec-command (instance-or-buffer command)
   "Sends the string COMMAND to the Uzbl instance INSTANCE-OR-BUFFER.
