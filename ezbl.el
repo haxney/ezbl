@@ -675,7 +675,7 @@ for more info):
 
   @[xml]@: Escapes any XML in the brackets."
   (let ((tag (sha1 (int-to-string (random)))))
-    (with-current-buffer (ezbl-instance-buffer inst)
+    (with-current-buffer (ezbl-instance-output-buffer inst)
       (ezbl-command-print inst
                           (format "%s{%s}%s" tag req tag))
       (goto-char (point-max))
@@ -824,7 +824,7 @@ The script specific arguments are this:
          (socket-filename (nth 4 args))
          (current-url (nth 5 args))
          (current-title (nth 6 args))
-         (buffer (ezbl-instance-display pid)))
+         (buffer (ezbl-instance-display-buffer pid)))
     (with-current-buffer buffer
       (cond
        ((equal type "load_finish_handler"))
