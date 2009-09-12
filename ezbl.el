@@ -447,14 +447,14 @@ is set to NEW-VALUE.
 
 Returns the value of %s in INST, or the new value, if it has been
 set." name name name))
-        (command-name (intern (format "ezbl-instance-%s" name))))
+         (command-name (intern (format "ezbl-instance-%s" name))))
     (fset command-name
           `(lambda (&optional inst new-value)
              ,doc
              (let* ((instance (ezbl-get-instance inst t))
                     (elt (assq (quote ,name) instance)))
                (if new-value
-                 (setcdr elt new-value)
+                   (setcdr elt new-value)
                  (cdr elt)))))))
 
 (defun ezbl-init-commands ()
@@ -583,8 +583,8 @@ This 'ezbl instance' is used in various other functions."
    (block 'spec-check
      (mapc '(lambda (spec)
               (let* ((key-name (car spec))
-                    (expected-type (cdr spec))
-                    (elt (assq key-name inst)))
+                     (expected-type (cdr spec))
+                     (elt (assq key-name inst)))
                 (when (null elt)
                   (return-from 'spec-check))
                 (when (not (eq expected-type (type-of (cdr elt))))
@@ -647,10 +647,10 @@ COMMAND is a Uzbl command as described by the Uzbl
 readme (http://www.uzbl.org/readme.php).
 
 See `ezbl-start' for a description of the format of INSTANCE."
-    ;; Append a newline (\n) to the end of COMMAND if one is not already there.
-    (when (not (string= "\n" (substring command -1)))
-      (setq command (concat command "\n")))
-    (process-send-string (ezbl-instance-process inst) command))
+  ;; Append a newline (\n) to the end of COMMAND if one is not already there.
+  (when (not (string= "\n" (substring command -1)))
+    (setq command (concat command "\n")))
+  (process-send-string (ezbl-instance-process inst) command))
 
 (defun ezbl-sync-request (inst req)
   "Request Uzl to evaluate a request string REQ and wait for the result.
@@ -853,8 +853,8 @@ Sets the server-name parameter to the current value of `server-name'."
   "Updates the mode-line format in each ezbl display-window
   according to `ezbl-mode-line-format'."
   (mapc '(lambda (inst)
-             (with-current-buffer (ezbl-instance-display-buffer (car inst))
-               (setq mode-line-format ezbl-mode-line-format)))
+           (with-current-buffer (ezbl-instance-display-buffer (car inst))
+             (setq mode-line-format ezbl-mode-line-format)))
         ezbl-instances))
 
 (defun ezbl-set-mode-line-format (symbol value)
