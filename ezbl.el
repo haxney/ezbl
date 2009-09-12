@@ -448,7 +448,6 @@ is set to NEW-VALUE.
 Returns the value of %s in INST, or the new value, if it has been
 set." name name name))
         (command-name (intern (format "ezbl-instance-%s" name))))
-    (message (format "creating command: %s" command-name))
     (fset command-name
           `(lambda (&optional inst new-value)
              ,doc
