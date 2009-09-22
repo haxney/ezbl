@@ -412,16 +412,28 @@ The function created takes a number of arguments specified by the
 `format' attribute of SPEC and returns a string suitable for
 `ezbl-exec-command'.
 
+Sets the `interactive' declaration to the `interactive' attribute
+of SPEC.
+
+It also defines a variable `ezbl-command-NAME-history' which can
+be used by the function to record the input history of the
+function when called interactively.
+
 See `ezbl-commands' for a description of the format of SPEC."
   (let* ((name (cdr (assq 'name spec)))
          (format (cdr (assq 'format spec)))
          (args (ezbl-get-command-args format))
          (doc (cdr (assq 'doc spec)))
          (output-format (replace-regexp-in-string "<[[:alnum:]_-]+>" "%s" format))
-         (command-name (intern (concat "ezbl-command-" name))))
+         (interactive-spec (cdr (assq 'interactive spec)))
+         (command-name (intern (concat "ezbl-command-" name)))
+         (history-list (intern (format "%s-history" command-name))))
+    ;; Make the symbol contained in `history-list' bound.
+    (set history-list nil)
     (fset command-name
           `(lambda (inst ,@args)
              ,doc
+             (interactive ,interactive-spec)
              (ezbl-exec-command inst (format ,output-format ,@args))))))
 
 (defun ezbl-make-instance-accessor-func (spec)
