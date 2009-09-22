@@ -966,6 +966,23 @@ Sets the server-name parameter to the current value of `server-name'."
   :type 'sexp
   :set 'ezbl-set-mode-line-format)
 
+(defvar ezbl-mode-map (let ((map (make-sparse-keymap)))
+                        (mapc '(lambda (item)
+                                 (let* ((binding (cdr (assq 'key-binding item)))
+                                        (name (cdr (assq 'name item)))
+                                        (func (intern (concat "ezbl-command-" name))))
+                                   (when binding
+                                     (define-key map (read-kbd-macro binding) func))))
+                                   ezbl-commands)
+                        map)
+       "Keymap for `ezbl-mode'.")
+
+(define-derived-mode ezbl-mode nil "Ezbl"
+  "Mode for interacting with Ezbl processes
+\\{ezbl-mode-map}"
+  :group 'ezbl
+  (setq buffer-read-only t))
+
 (provide 'ezbl)
 
 ;;; ezbl.el ends here
