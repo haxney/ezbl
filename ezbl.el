@@ -839,9 +839,8 @@ HEIGHT - The height of the widget"
     (ezbl-init-commands))
   (switch-to-buffer (generate-new-buffer uri))
 
-  ;; Currently has problems embedding into an empty buffer, so insert it between
-  ;; two spaces.
-  (insert "  ")
+  ;; Currently has problems embedding into an empty buffer, so insert a space.
+  (insert " ")
   (backward-char)
 
   (ezbl-embed)
