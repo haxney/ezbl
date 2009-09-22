@@ -318,7 +318,16 @@ The following attributes can be used in each alist:
 
     scroll_vert <amount>
 
-  All variables must be enclosed in angle brackets.")
+- interactive (optional)
+
+  The interactive spec for the function. If this attribute is not
+  present, then the function will not be interactive.
+
+- doc (optional)
+
+  The documentation string to provide for the function.
+
+All variables must be enclosed in angle brackets.")
 
 (defvar ezbl-variables
   '((uri . "(callback: load the uri)")
