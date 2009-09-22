@@ -69,6 +69,16 @@ buffer names.")
 (defvar ezbl-commands
   '(((name . "set")
      (format . "set <key> = <value>")
+     (interactive . (let* ((var-name (completing-read "Variable to set: "
+                                                      (mapcar '(lambda (item)
+                                                                 (symbol-name (car item))) ezbl-variables)
+                                                      nil ;; predicate
+                                                      t   ;; require-match
+                                                      nil ;; initial-input
+                                                      'ezbl-command-set-history)) ;; hist
+                           (default (ezbl-get-variable nil var-name))
+                           (new-val (read-string (format "New value (%s): " default) nil nil default)))
+                      (list nil var-name new-val)))
      (doc . "Used for changing variables on the fly. Sets KEY
      equal to VALUE.
 
