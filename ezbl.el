@@ -443,7 +443,7 @@ See `ezbl-commands' for a description of the format of SPEC."
     (fset command-name
           `(lambda (inst ,@args)
              ,doc
-             (interactive ,interactive-spec)
+             ,(when interactive-spec `(interactive ,interactive-spec))
              (ezbl-exec-command inst (format ,output-format ,@args))))))
 
 (defun ezbl-make-instance-accessor-func (spec)
