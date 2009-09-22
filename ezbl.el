@@ -944,22 +944,18 @@ Sets the server-name parameter to the current value of `server-name'."
   (ezbl-update-mode-line-format))
 
 (defcustom ezbl-mode-line-format
-  (list "-"
-        'mode-line-mule-info
-        'mode-line-modified
-        'mode-line-frame-identification
-        '(:eval (ezbl-run-js ezbl-instance "document.title"))
-        "--"
-        '(:eval (ezbl-get-variable ezbl-instance "uri"))
-        "   "
-        'global-mode-string
-        "   %[("
-        'mode-line-process
-        'minor-mode-alist
-        "%n"
-        ")%]--"
-        '(which-func-mode ("" which-func-format "--"))
-        "-%-")
+  '("-"
+    mode-line-mule-info
+    mode-line-modified
+    mode-line-frame-identification
+    (:propertize (:eval (ezbl-run-js ezbl-instance "document.title"))
+                 face bold)
+    " -- "
+    (:eval (ezbl-get-variable ezbl-instance "uri"))
+    "   "
+    mode-line-modes
+    (which-func-mode ("" which-func-format "--"))
+    "-%-")
   "The format of the mode line in an Ezbl display buffer."
   :group 'ezbl
   :type 'sexp
