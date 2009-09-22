@@ -652,7 +652,11 @@ This 'ezbl instance' is used in various other functions."
       (rename-buffer (format ezbl-display-buffer-format pid))
       (set (make-local-variable 'ezbl-instance) instance)
 
+      ;; Make `ezbl-instance' survive `kill-all-local-variables'
+      (put 'ezbl-instance 'permanent-local t)
+
       (add-to-list 'ezbl-instances `(,pid . ,instance))
+      (ezbl-mode)
       instance)))
 
 (defun ezbl-instance-p (inst)
@@ -841,19 +845,14 @@ HEIGHT - The height of the widget"
   (backward-char)
 
   (ezbl-embed)
-  (add-hook 'ezbl-xembed-ready-hook
-            'ezbl-init-handlers
-            nil
-            t)
+
   (add-hook 'ezbl-xembed-ready-hook
             `(lambda ()
                (ezbl-command-uri ezbl-instance ,uri))
             nil
             t)
-  (add-hook 'ezbl-xembed-ready-hook
-            'ezbl-update-mode-line-format
-            nil
-            t)
+  (put 'ezbl-xembed-ready-hook 'permanent-local t)
+
   (current-buffer))
 
 (defun ezbl-callback (type &rest args)
@@ -982,6 +981,10 @@ Sets the server-name parameter to the current value of `server-name'."
 \\{ezbl-mode-map}"
   :group 'ezbl
   (setq buffer-read-only t))
+
+(add-hook 'ezbl-mode-hook 'ezbl-init-handlers)
+
+(add-hook 'ezbl-mode-hook 'ezbl-update-mode-line-format)
 
 (provide 'ezbl)
 
