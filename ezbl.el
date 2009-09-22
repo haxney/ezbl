@@ -649,7 +649,7 @@ This 'ezbl instance' is used in various other functions."
       (with-current-buffer output-buffer
         (rename-buffer (format ezbl-output-buffer-format (int-to-string pid)))
         (set (make-local-variable 'ezbl-instance) instance))
-      (rename-buffer (format ezbl-display-buffer-format (int-to-string pid)))
+      (rename-buffer (format ezbl-display-buffer-format pid))
       (set (make-local-variable 'ezbl-instance) instance)
 
       (add-to-list 'ezbl-instances `(,pid . ,instance))
