@@ -99,6 +99,7 @@ variable 'var' is printed.
 * use this to print the value of a variable."))
     ((name . "bind")
      (format . "bind <string> = <command>")
+     (interactive . "U\nsKey sequence: \nsCommand: ")
      (doc . "Sets the character sequence STRING to invoke COMMAND
      when typed interactively in Uzbl.
 
@@ -134,12 +135,15 @@ variable 'var' is printed.
       triggered immediately."))
     ((name . "back")
      (format . "back")
+     (interactive . "U")
      (doc . "Move backwards in the browser history."))
     ((name . "forward")
      (format . "forward")
+     (interactive . "U")
      (doc . "Move forwards in the browser history."))
     ((name . "scroll_vert")
      (format . "scroll_vert <amount>")
+     (interactive . "U\nnScroll amount: ")
      (doc . "Scroll vertically by AMOUNT.
 
 AMOUNT is specified either in pixels, with a 'px' ending (55px)
@@ -151,6 +155,7 @@ or percentage (55%).
 * set amount to 100% to scroll a whole page."))
     ((name . "scroll_horz")
      (format . "scroll_horz <amount>")
+     (interactive . "U\nnScroll amount: ")
      (doc . "Scroll horizontally by AMOUNT.
 
 AMOUNT is specified either in pixels, with a 'px' ending (55px)
@@ -162,42 +167,54 @@ or percentage (55%).
 * set amount to 100% to scroll a whole page"))
     ((name . "scroll_begin")
      (format . "scroll_begin")
+     (interactive . "U")
      (doc . "Scroll to the beginning of the page."))
     ((name . "scroll_end")
      (format . "scroll_end")
+     (interactive . "U")
      (doc . "Scroll to the end of the page."))
     ((name . "reload")
      (format . "reload")
+     (interactive . "U")
      (doc . "Reload the current page."))
     ((name . "reload_ign_cache")
      (format . "reload_ign_cache")
+     (interactive . "U")
      (doc . "Reload the current page, clearing the cache."))
     ((name . "stop")
      (format . "stop")
+     (interactive . "U")
      (doc . "Stop the currently loading page."))
     ((name . "zoom_in")
      (format . "zoom_in")
+     (interactive . "U")
      (doc . "Increase the zoom level."))
     ((name . "zoom_out")
      (format . "zoom_out")
+     (interactive . "U")
      (doc . "Decrease the zoom level."))
     ((name . "uri")
      (format . "uri <address>")
+     (interactive . "U\nsAddress: ")
      (doc . "Visit the Uri ADDRESS"))
     ((name . "js")
      (format . "js <body>")
+     (interactive . "U\nsJavascript to execute: ")
      (doc . "Execute JavaScript within the browser.
 
 * execute the javascript in BODY.
 * remember that the commands must not contain line breaks."))
     ((name . "script")
      (format . "script <file>")
+     (interactive . "U\nfJavascript file to execute: ")
      (doc . "execute the JavaScript in FILE."))
     ((name . "toggle_status")
      (format . "toggle_status")
+     (interactive . "U")
      (doc . ""))
     ((name . "spawn")
      (format . "spawn <executable> <additonal_args>")
+     (interactive . "U\nFFile to spawn\nsAdditional arguments:")
      (doc . "Runs a command.
 
 * See the \"external scripts\" section of the Uzbl readme for
@@ -211,6 +228,7 @@ or percentage (55%).
   higher."))
     ((name . "sh")
      (format . "sh <command>")
+     (interactive . "U\nsCommand to execute: ")
      (doc . "Run a shell command.
 
 * runs a shell command by expanding %s in the shell_cmd variable
@@ -222,6 +240,7 @@ or percentage (55%).
   higher."))
     ((name . "sync_spawn")
      (format . "sync_spawn <executable> <additional_args>")
+     (interactive . "U\nFFile to spawn\nsAdditional arguments:")
      (doc . "Tell Uzbl to synchronously spawn a command.
 
 See `ezbl-command-spawn' for details.
@@ -234,6 +253,7 @@ See `ezbl-command-spawn' for details.
   it runs"))
     ((name . "sync_sh")
      (format . "sync_sh <command>")
+     (interactive . "U\nsCommand to run: ")
      (doc . "Tell Uzbl to synchronously run a shell command.
 
 See `ezbl-command-sh' for details.
@@ -246,9 +266,11 @@ See `ezbl-command-sh' for details.
   it runs"))
     ((name . "exit")
      (format . "exit")
+     (interactive . "U")
      (doc . "Close this instance of Uzbl."))
     ((name . "search")
      (format . "search <string>")
+     (interactive . "U\nsSearch: ")
      (doc . "Search for STRING within the content of the current
      Uzbl page.
 
@@ -256,12 +278,14 @@ See `ezbl-command-sh' for details.
   occurrence of the string previously searched for."))
     ((name . "search_reverse")
      (format . "search_reverse <string>")
+     (interactive . "U\nsSearch backward: ")
      (doc . "Search backwards for STRING in the current page.
 
 * search with no string will search for the next/previous
   occurrence of the string previously searched for."))
     ((name . "toggle_insert_mode")
      (format . "toggle_insert_mode <optional_state>")
+     (interactive . "U")
      (doc . "Set the insert mode to OPTIONAL_STATE.
 
 If the optional state is 0, disable insert mode. If 1, enable
@@ -275,11 +299,13 @@ insert mode."))
   again (or use as config file)"))
     ((name . "keycmd")
      (format . "keycmd <string>")
+     (interactive . "U\nsSet command buffer to: ")
      (doc . "Set the interactive command buffer to STRING.
 
 If STRING is a valid binding, it will execute."))
     ((name . "keycmd_nl")
      (format . "keycmd_nl <string>")
+     (interactive . "U\nsSet command buffer to: ")
      (doc . "Set the interactive command buffer to STRING and emulate pressing return.
 
 See `ezbl-command-keycmd'.
@@ -290,9 +316,11 @@ parameter to execute. For example, keycmd_nl o google.com would
 load the said url if you have a binding like \"bind o _ = uri %s\"."))
     ((name . "keycmd_bs")
      (format . "keycmd_bs")
+     (interactive . "U")
      (doc . "Erase (backspace) one character from the command buffer."))
     ((name . "chain")
      (format . "chain <command> <command2>")
+     (interactive . "U\nsCommand 1: \nsCommand 2: ")
      (doc . "Use for chaining multiple commands.
 
 * remember to quote the commands; one command must come as one
