@@ -79,6 +79,7 @@ buffer names.")
                            (default (ezbl-get-variable nil var-name))
                            (new-val (read-string (format "New value (%s): " default) nil nil default)))
                       (list nil var-name new-val)))
+     (key-binding . "C-c C-s")
      (doc . "Used for changing variables on the fly. Sets KEY
      equal to VALUE.
 
@@ -136,14 +137,17 @@ variable 'var' is printed.
     ((name . "back")
      (format . "back")
      (interactive . "U")
+     (key-binding . "C-c C-b")
      (doc . "Move backwards in the browser history."))
     ((name . "forward")
      (format . "forward")
      (interactive . "U")
+     (key-binding . "C-c C-f")
      (doc . "Move forwards in the browser history."))
     ((name . "scroll_vert")
      (format . "scroll_vert <amount>")
      (interactive . "U\nnScroll amount: ")
+     (key-binding . "C-c C-v")
      (doc . "Scroll vertically by AMOUNT.
 
 AMOUNT is specified either in pixels, with a 'px' ending (55px)
@@ -156,6 +160,7 @@ or percentage (55%).
     ((name . "scroll_horz")
      (format . "scroll_horz <amount>")
      (interactive . "U\nnScroll amount: ")
+     (key-binding . "M-v")
      (doc . "Scroll horizontally by AMOUNT.
 
 AMOUNT is specified either in pixels, with a 'px' ending (55px)
@@ -168,14 +173,17 @@ or percentage (55%).
     ((name . "scroll_begin")
      (format . "scroll_begin")
      (interactive . "U")
+     (key-binding . "C-a")
      (doc . "Scroll to the beginning of the page."))
     ((name . "scroll_end")
      (format . "scroll_end")
      (interactive . "U")
+     (key-binding . "C-e")
      (doc . "Scroll to the end of the page."))
     ((name . "reload")
      (format . "reload")
      (interactive . "U")
+     (key-binding . "C-c C-r")
      (doc . "Reload the current page."))
     ((name . "reload_ign_cache")
      (format . "reload_ign_cache")
@@ -184,18 +192,22 @@ or percentage (55%).
     ((name . "stop")
      (format . "stop")
      (interactive . "U")
+     (key-binding . "C-c C-g")
      (doc . "Stop the currently loading page."))
     ((name . "zoom_in")
      (format . "zoom_in")
      (interactive . "U")
+     (key-binding . "C-c z i")
      (doc . "Increase the zoom level."))
     ((name . "zoom_out")
      (format . "zoom_out")
      (interactive . "U")
+     (key-binding . "C-c z o")
      (doc . "Decrease the zoom level."))
     ((name . "uri")
      (format . "uri <address>")
      (interactive . "U\nsAddress: ")
+     (key-binding . "C-c C-o")
      (doc . "Visit the Uri ADDRESS"))
     ((name . "js")
      (format . "js <body>")
@@ -207,6 +219,7 @@ or percentage (55%).
     ((name . "script")
      (format . "script <file>")
      (interactive . "U\nfJavascript file to execute: ")
+     (key-binding . "C-c C-j")
      (doc . "execute the JavaScript in FILE."))
     ((name . "toggle_status")
      (format . "toggle_status")
@@ -267,10 +280,12 @@ See `ezbl-command-sh' for details.
     ((name . "exit")
      (format . "exit")
      (interactive . "U")
+     (key-binding . "C-c C-q")
      (doc . "Close this instance of Uzbl."))
     ((name . "search")
      (format . "search <string>")
      (interactive . "U\nsSearch: ")
+     (key-binding . "C-s")
      (doc . "Search for STRING within the content of the current
      Uzbl page.
 
@@ -279,6 +294,7 @@ See `ezbl-command-sh' for details.
     ((name . "search_reverse")
      (format . "search_reverse <string>")
      (interactive . "U\nsSearch backward: ")
+     (key-binding . "C-r")
      (doc . "Search backwards for STRING in the current page.
 
 * search with no string will search for the next/previous
@@ -354,6 +370,12 @@ The following attributes can be used in each alist:
 - doc (optional)
 
   The documentation string to provide for the function.
+
+- key-binding (optional)
+
+  The key binding in `ezbl-mode-map' of the function. If it is
+  not included, no keybinding is set for that command. The value
+  must be a string to be supplied to the `kbd' macro.
 
 All variables must be enclosed in angle brackets.")
 
