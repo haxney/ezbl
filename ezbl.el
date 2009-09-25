@@ -975,7 +975,8 @@ Sets the server-name parameter to the current value of `server-name'."
   "Mode for interacting with Ezbl processes
 \\{ezbl-mode-map}"
   :group 'ezbl
-  (setq buffer-read-only t))
+  (toggle-read-only t)
+  (set-buffer-modified-p nil))
 
 (add-hook 'ezbl-mode-hook 'ezbl-init-handlers)
 
