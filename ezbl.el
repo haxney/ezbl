@@ -22,6 +22,9 @@
 ;;
 ;;  Uzbl version 2009.07.18 or greater is required. It has not been tested with
 ;;  other versions.
+;;
+;;  Run `ezbl-open' to start a Uzbl instance and browse to a URL. Also, check
+;;  `ezbl-mode' for a listing of the key bindings of Ezbl.
 
 (eval-when-compile
   (require 'cl))
