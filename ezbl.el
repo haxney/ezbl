@@ -880,8 +880,8 @@ arguments:
 $1 uzbl-config-file
 $2 uzbl-pid
 $3 uzbl-x-window-id
-$4 uzbl_fifo-filename
-$5 uzbl_socket-filename
+$4 uzbl-fifo-filename
+$5 uzbl-socket-filename
 $6 current page url
 $7 current page title
 .. [ script specific ] (optional)
