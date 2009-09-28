@@ -933,7 +933,9 @@ The script specific arguments are this:
          (cookie-uri (concat cookie-scheme "://" cookie-host cookie-path))
          (url-current-object (url-generic-parse-url cookie-uri)))
     (when (equal cookie-op "PUT")
-      (url-cookie-handle-set-cookie cookie-data))))
+      (url-cookie-handle-set-cookie cookie-data))
+    (when (equal cookie-op "GET")
+      (message (url-cookie-generate-header-lines cookie-host cookie-path cookie-secure)))))
 
 (defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
