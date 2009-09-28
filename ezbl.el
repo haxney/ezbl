@@ -28,6 +28,7 @@
 
 (eval-when-compile
   (require 'cl))
+(require 'url-cookie)
 
 (defgroup ezbl nil "Settings for Ezbl, the Emacs frontend for Uzbl.")
 
@@ -914,10 +915,23 @@ The script specific arguments are this:
        ((equal type "load_commit_handler"))
        ((equal type "history_handler"))
        ((equal type "download_handler"))
-       ((equal type "cookie_handler"))
+       ((equal type "cookie_handler")
+        (ezbl-cookie-handler args))
        ((equal type "new_window"))
        (t
         (error (format "Unknown callback type '%s' received." type)))))))
+
+(defun ezbl-cookie-handler (args)
+  (let* ((cookie-op (nth 7 args))
+         (cookie-scheme (nth 8 args))
+         (cookie-host (nth 9 args))
+         (cookie-path (nth 10 args))
+         (cookie-data (nth 11 args))
+         (url-current-object
+          (url-generic-parse-url
+           (concat cookie-scheme "://" cookie-host cookie-path))))
+    (when (equal cookie-op "PUT")
+      (url-cookie-handle-set-cookie cookie-data))))
 
 (defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
