@@ -449,7 +449,9 @@ All variables must be enclosed in angle brackets.")
                           "new_window")
   "A list of the Uzbl handler variables.")
 
-(defvar ezbl-handler-path (concat (file-name-directory load-file-name) "handler.py")
+(defvar ezbl-handler-path (if (null load-file-name)
+                              (locate-library "handler.py" t)
+                            (concat (file-name-directory load-file-name) "handler.py"))
   "The path of the Uzbl callback handler.")
 
 (defvar ezbl-xwidget-id-counter 0
