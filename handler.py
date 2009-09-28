@@ -33,9 +33,9 @@ Where "ezbl" is the Emacs server name (which defaults to "server").
 import sys
 import subprocess
 
-args = sys.argv[1:-2]
-handler_type = sys.argv[-2]
-server = sys.argv[-1]
+args = sys.argv[1:-2]       # All but the last two arguments.
+handler_type = sys.argv[-2] # The second-to-last arg
+server = sys.argv[-1]       # The last arg
 
 def join_array(args):
     return '" "'.join(args)
