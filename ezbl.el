@@ -924,6 +924,9 @@ The script specific arguments are this:
 (defun ezbl-cookie-handler (args)
   (let* ((cookie-op (nth 7 args))
          (cookie-scheme (nth 8 args))
+         (cookie-secure (if (equal cookie-scheme "https")
+                            t
+                          nil))
          (cookie-host (nth 9 args))
          (cookie-path (nth 10 args))
          (cookie-data (nth 11 args))
