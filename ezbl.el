@@ -927,9 +927,8 @@ The script specific arguments are this:
          (cookie-host (nth 9 args))
          (cookie-path (nth 10 args))
          (cookie-data (nth 11 args))
-         (url-current-object
-          (url-generic-parse-url
-           (concat cookie-scheme "://" cookie-host cookie-path))))
+         (cookie-uri (concat cookie-scheme "://" cookie-host cookie-path))
+         (url-current-object (url-generic-parse-url cookie-uri)))
     (when (equal cookie-op "PUT")
       (url-cookie-handle-set-cookie cookie-data))))
 
