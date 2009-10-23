@@ -985,6 +985,39 @@ Sets the server-name parameter to the current value of `server-name'."
 
 (add-hook 'ezbl-mode-hook 'ezbl-update-mode-line-format)
 
+(defun ezbl-xwidget-resize-at (pos width height)
+  "Resize xwidget at postion POS to WIDTH and HEIGHT.
+theres no corresponding resize-id fn yet, because of display
+property/xwidget id impedance mismatch.
+"
+  (let*
+      ((xwidget-prop (cdr (get-text-property pos 'display)))
+       (id (plist-get  xwidget-prop ':xwidget-id)))
+    (setq xwidget-prop (plist-put xwidget-prop ':width width))
+    (setq xwidget-prop (plist-put xwidget-prop  ':height height))
+
+    (put-text-property pos (+ 1 pos) 'display (cons 'xwidget xwidget-prop))
+    (message "prop %s" xwidget-prop)
+    (message "id %d w %d  h %d" id width height)
+    (xwidget-resize id width height);; this is a badly named internal function!
+    ))
+
+(defun ezbl-fill-window (inst)
+  "Re-sizes the xwidget in the display-buffer of INST to fill its
+entire window."
+  (let (buffer (ezbl-instance-display-buffer inst))
+    (with-current-buffer buffer
+      (let* ((edges-list (window-inside-pixel-edges (get-buffer-window buffer)))
+             (left (nth 0 edges-list))
+             (top (nth 1 edges-list))
+             (right (nth 2 edges-list))
+             (bottom (nth 3 edges-list))
+             (height (- bottom top))
+             (width (- right left)))
+        (format "width: %s height: %s" width height)
+        ;; make not read-only
+        (xwidget-resize-at 1 width height)))))
+
 (provide 'ezbl)
 
 ;;; ezbl.el ends here
