@@ -979,10 +979,11 @@ Sets the server-name parameter to the current value of `server-name'."
 \\{ezbl-mode-map}"
   :group 'ezbl
   (toggle-read-only t)
-  (set-buffer-modified-p nil))
+  (set-buffer-modified-p nil)
+  (add-hook 'window-configuration-change-hook 'ezbl-fill-window nil t))
 
 (add-hook 'ezbl-mode-hook 'ezbl-init-handlers)
-
+(add-hook 'ezbl-mode-hook 'ezbl-fill-window)
 (add-hook 'ezbl-mode-hook 'ezbl-update-mode-line-format)
 
 (defun ezbl-xwidget-resize-at (pos width height)
@@ -999,7 +1000,7 @@ property/xwidget id impedance mismatch.
     (put-text-property pos (+ 1 pos) 'display (cons 'xwidget xwidget-prop))
     (xwidget-resize id width height)))
 
-(defun ezbl-fill-window (inst)
+(defun ezbl-fill-window (&optional inst)
   "Re-sizes the xwidget in the display-buffer of INST to fill its
 entire window."
   (let ((buffer (ezbl-instance-display-buffer inst)))
