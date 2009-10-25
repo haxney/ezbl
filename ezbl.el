@@ -668,17 +668,18 @@ This 'ezbl instance' is used in various other functions."
   "Return t if INST is an ezbl-instance."
   (and
    (consp inst)
+   (consp (car inst))
    ;; Check that each element of `ezbl-instance-spec' matches the key and type
    ;; of an association in INST.
-   (block 'spec-check
+   (block spec-check
      (mapc '(lambda (spec)
               (let* ((key-name (car spec))
                      (expected-type (cdr spec))
                      (elt (assq key-name inst)))
                 (when (null elt)
-                  (return-from 'spec-check))
+                  (return-from spec-check))
                 (when (not (eq expected-type (type-of (cdr elt))))
-                  (return-from 'spec-check))))
+                  (return-from spec-check))))
            ezbl-instance-spec)
      ;; Return INST if the block exited normally (not using `return-from').
      inst)))
