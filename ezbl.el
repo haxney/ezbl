@@ -981,11 +981,43 @@ Sets the server-name parameter to the current value of `server-name'."
 \\{ezbl-mode-map}"
   :group 'ezbl
   (toggle-read-only t)
-  (set-buffer-modified-p nil))
+  (set-buffer-modified-p nil)
+  (add-hook 'window-configuration-change-hook 'ezbl-fill-window nil t))
 
 (add-hook 'ezbl-mode-hook 'ezbl-init-handlers)
-
+(add-hook 'ezbl-mode-hook 'ezbl-fill-window)
 (add-hook 'ezbl-mode-hook 'ezbl-update-mode-line-format)
+
+(defun ezbl-xwidget-resize-at (pos width height)
+  "Resize xwidget at postion POS to WIDTH and HEIGHT.
+theres no corresponding resize-id fn yet, because of display
+property/xwidget id impedance mismatch.
+"
+  (let* ((xwidget-prop (cdr (get-text-property pos 'display)))
+         (id (plist-get  xwidget-prop ':xwidget-id)))
+
+    (setq xwidget-prop (plist-put xwidget-prop ':width width))
+    (setq xwidget-prop (plist-put xwidget-prop ':height height))
+
+    (put-text-property pos (+ 1 pos) 'display (cons 'xwidget xwidget-prop))
+    (xwidget-resize id width height)))
+
+(defun ezbl-fill-window (&optional inst)
+  "Re-sizes the xwidget in the display-buffer of INST to fill its
+entire window."
+  (let ((buffer (ezbl-instance-display-buffer inst)))
+    (with-current-buffer buffer
+      (let* ((edges-list (window-inside-pixel-edges (get-buffer-window buffer)))
+             (left (nth 0 edges-list))
+             (top (nth 1 edges-list))
+             (right (nth 2 edges-list))
+             (bottom (nth 3 edges-list))
+             (height (- bottom top))
+             (width (- right left)))
+        (toggle-read-only -1)
+        (ezbl-xwidget-resize-at 1 width height)
+        (toggle-read-only t)
+        (set-buffer-modified-p nil)))))
 
 (provide 'ezbl)
 
