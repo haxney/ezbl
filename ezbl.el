@@ -1005,7 +1005,7 @@ property/xwidget id impedance mismatch.
 (defun ezbl-fill-window (inst)
   "Re-sizes the xwidget in the display-buffer of INST to fill its
 entire window."
-  (let (buffer (ezbl-instance-display-buffer inst))
+  (let ((buffer (ezbl-instance-display-buffer inst)))
     (with-current-buffer buffer
       (let* ((edges-list (window-inside-pixel-edges (get-buffer-window buffer)))
              (left (nth 0 edges-list))
