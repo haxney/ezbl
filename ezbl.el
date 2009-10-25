@@ -990,17 +990,14 @@ Sets the server-name parameter to the current value of `server-name'."
 theres no corresponding resize-id fn yet, because of display
 property/xwidget id impedance mismatch.
 "
-  (let*
-      ((xwidget-prop (cdr (get-text-property pos 'display)))
-       (id (plist-get  xwidget-prop ':xwidget-id)))
+  (let* ((xwidget-prop (cdr (get-text-property pos 'display)))
+         (id (plist-get  xwidget-prop ':xwidget-id)))
+
     (setq xwidget-prop (plist-put xwidget-prop ':width width))
-    (setq xwidget-prop (plist-put xwidget-prop  ':height height))
+    (setq xwidget-prop (plist-put xwidget-prop ':height height))
 
     (put-text-property pos (+ 1 pos) 'display (cons 'xwidget xwidget-prop))
-    (message "prop %s" xwidget-prop)
-    (message "id %d w %d  h %d" id width height)
-    (xwidget-resize id width height);; this is a badly named internal function!
-    ))
+    (xwidget-resize id width height)))
 
 (defun ezbl-fill-window (inst)
   "Re-sizes the xwidget in the display-buffer of INST to fill its
