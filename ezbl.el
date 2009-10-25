@@ -1014,9 +1014,10 @@ entire window."
              (bottom (nth 3 edges-list))
              (height (- bottom top))
              (width (- right left)))
-        (format "width: %s height: %s" width height)
-        ;; make not read-only
-        (xwidget-resize-at 1 width height)))))
+        (toggle-read-only -1)
+        (ezbl-xwidget-resize-at 1 width height)
+        (toggle-read-only t)
+        (set-buffer-modified-p nil)))))
 
 (provide 'ezbl)
 
