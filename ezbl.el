@@ -916,26 +916,35 @@ The script specific arguments are this:
        ((equal type "history_handler"))
        ((equal type "download_handler"))
        ((equal type "cookie_handler")
-        (ezbl-cookie-handler args))
+;        (ezbl-cookie-handler args)
+        )
        ((equal type "new_window"))
        (t
         (error (format "Unknown callback type '%s' received." type)))))))
 
-(defun ezbl-cookie-handler (args)
-  (let* ((cookie-op (nth 7 args))
-         (cookie-scheme (nth 8 args))
-         (cookie-secure (if (equal cookie-scheme "https")
+(defun handle-socket-cookie (process event)
+  "Handle a cookie request over a socket.
+
+Use transaction queues to enable more reliable processing."
+  (when (string-match-p "^open" event)
+   (accept-process-output process)
+   (let* ((buffer (process-buffer process))
+          (answer (with-current-buffer buffer
+                    (buffer-string)))
+          (args (split-string answer "\0")))
+     (when (>= (length args) 4)
+       (apply 'ezbl-cookie-handler args))
+     )))
+
+(defun ezbl-cookie-handler (op scheme host path &optional data &rest ignored)
+  (let ((secure (if (equal scheme "https")
                             t
                           nil))
-         (cookie-host (nth 9 args))
-         (cookie-path (nth 10 args))
-         (cookie-data (nth 11 args))
-         (cookie-uri (concat cookie-scheme "://" cookie-host cookie-path))
-         (url-current-object (url-generic-parse-url cookie-uri)))
-    (when (equal cookie-op "PUT")
-      (url-cookie-handle-set-cookie cookie-data))
-    (when (equal cookie-op "GET")
-      (message (url-cookie-generate-header-lines cookie-host cookie-path cookie-secure)))))
+         (url-current-object (url-parse-make-urlobj scheme nil nil host nil path)))
+    (when (equal op "PUT")
+      (url-cookie-handle-set-cookie data))
+    (when (equal op "GET")
+      (url-cookie-generate-header-lines host path secure))))
 
 (defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
