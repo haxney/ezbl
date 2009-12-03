@@ -28,11 +28,17 @@
 
 (eval-when-compile
   (require 'cl))
+(require 'url-cookie)
 
 (defgroup ezbl nil "Settings for Ezbl, the Emacs frontend for Uzbl.")
 
 (defcustom ezbl-exec-path "/usr/bin/uzbl"
   "The location of the Uzbl executable."
+  :group 'ezbl
+  :type 'file)
+
+(defcustom ezbl-cookie-socket "/tmp/ezbl.sock"
+  "The location of the socket through which to handle cookies."
   :group 'ezbl
   :type 'file)
 
@@ -52,6 +58,14 @@ variable.")
 
 See `ezbl-start' for a description of the format of this
 variable.")
+
+(defvar ezbl-cookie-process nil
+  "The process which is listening for cookie requests from Uzbl
+processes.")
+
+(defvar ezbl-initialized nil
+  "Keeps track of whether or not Ezbl has been initialized. This
+should be set by `ezbl-init'.")
 
 (defvar ezbl-instance-spec
   '((arguments . cons)
@@ -475,7 +489,7 @@ Would return (amount)."
   (let ((start 0)
         (args nil))
     (while (string-match "<\\([[:alnum:]_-]+\\)>" command start)
-      (setq args (append (list (intern (match-string 1 command))) args))
+      (setq args (add-to-list 'args (intern (match-string 1 command)) t))
       (setq start (match-end 1)))
     args))
 
@@ -552,6 +566,14 @@ each one. Also, run through `ezbl-instance-spec' and call
   (interactive)
   (append (mapcar 'ezbl-make-command-func ezbl-commands)
           (mapcar 'ezbl-make-instance-accessor-func ezbl-instance-spec)))
+
+(defun ezbl-init ()
+  "Starts up the services needed for Ezbl to run.
+
+For now, only the cookie handler is started."
+  (unless ezbl-initialized
+    (ezbl-listen-cookie-socket nil t)
+    (setq ezbl-initialized t)))
 
 (defun ezbl-start (&rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
@@ -841,8 +863,9 @@ HEIGHT - The height of the widget"
   (when (null server-process)
     (error "Emacs server is required for Ezbl, but the server is not started."))
 
-  (when (not (fboundp 'ezbl-command-uri))
-    (ezbl-init-commands))
+  (unless ezbl-initialized
+    (ezbl-init))
+
   (switch-to-buffer (generate-new-buffer uri))
 
   ;; Currently has problems embedding into an empty buffer, so insert a space.
@@ -917,10 +940,70 @@ The script specific arguments are this:
        ((equal type "load_commit_handler"))
        ((equal type "history_handler"))
        ((equal type "download_handler"))
-       ((equal type "cookie_handler"))
+       ((equal type "cookie_handler")
+;        (ezbl-cookie-handler args)
+        )
        ((equal type "new_window"))
        (t
         (error (format "Unknown callback type '%s' received." type)))))))
+
+(defun ezbl-cookie-sentinel (process event)
+  "Handle a cookie request over a socket."
+  (when (string-match-p "^open" event)
+    (accept-process-output process)
+    (let* ((buffer (process-buffer process))
+           (answer (with-current-buffer buffer
+                     (buffer-string)))
+           (args (split-string answer "\0"))
+           (result (apply 'ezbl-cookie-handler args)))
+      (when (and result
+                 (> 0 (length (split-string result))))
+        (process-send-string process result)))))
+
+(defun ezbl-cookie-handler (op scheme host path &optional data &rest ignored)
+  (let ((secure (if (equal scheme "https")
+                            t
+                          nil))
+         (url-current-object (url-parse-make-urlobj scheme nil nil host nil path)))
+    (when (equal op "PUT")
+      (url-cookie-handle-set-cookie data))
+    (when (equal op "GET")
+      (url-cookie-generate-header-lines host path secure))))
+
+(defun ezbl-listen-cookie-socket (&optional path force)
+  "Begin listening for Uzbl cookie requests.
+
+Creates a server process on a local socket at PATH, or
+`ezbl-cookie-socket' if PATH is nil.
+
+Starts a process and stores it in `ezbl-cookie-process' if it is
+nil. If `ezbl-cookie-process' is non-nil, then don't create a
+process unless FORCE is non-nil, in which case kill the existing
+process and start a new one."
+  (when ezbl-cookie-process
+    (unless force
+      (error "A cookie process already exists")))
+
+  (unless (featurep 'make-network-process '(:type seqpacket))
+    (error "This version of Emacs does not support SEQPACKET sockets"))
+
+  (let* ((sock-path (or path ezbl-cookie-socket)))
+    (when (file-exists-p sock-path)
+      (if force
+          (delete-file sock-path)
+        (error (format "Cannot listen on `%s', file exists" sock-path))))
+
+    (make-network-process :name "ezbl-cookie"
+                          :type 'seqpacket
+                          :server t
+                          :service sock-path
+                          :family 'local
+                          :sentinel 'ezbl-cookie-sentinel)))
+
+(defun ezbl-cookie-set-handler (inst &optional path)
+  "Set Ezbl instance INST's cookie_handler to
+  `ezbl-cookie-socket' or PATH, if it's given."
+  (ezbl-command-set inst "cookie_handler" (format "talk_to_socket %s" (or path ezbl-cookie-socket))))
 
 (defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
@@ -932,7 +1015,8 @@ Sets the server-name parameter to the current value of `server-name'."
     (error "`ezbl-handler-path' is null, so \"handler.py\" could not be located.."))
   (mapc '(lambda (type)
            (ezbl-command-set inst type (format "spawn %s %s %s" ezbl-handler-path type server-name)))
-        ezbl-handlers))
+        ezbl-handlers)
+  (ezbl-cookie-set-handler inst))
 
 (defun ezbl-update-mode-line-format ()
   "Updates the mode-line format in each ezbl display-window
@@ -1019,6 +1103,8 @@ entire window."
         (ezbl-xwidget-resize-at 1 width height)
         (toggle-read-only t)
         (set-buffer-modified-p nil)))))
+
+(ezbl-init-commands)
 
 (provide 'ezbl)
 
