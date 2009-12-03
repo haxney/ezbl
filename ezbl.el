@@ -93,7 +93,7 @@ buffer names.")
                                                       t   ;; require-match
                                                       nil ;; initial-input
                                                       'ezbl-command-set-history)) ;; hist
-                           (default (ezbl-get-variable nil var-name))
+                           (default (ezbl-variable-get nil var-name))
                            (new-val (read-string (format "New value (%s): " default) nil nil default)))
                       (list nil var-name new-val)))
      (key-binding . "C-c C-s")
@@ -478,7 +478,7 @@ All variables must be enclosed in angle brackets.")
   "Commands to run when an ezbl instance receives the
 `xembed-ready' signal.")
 
-(defun ezbl-get-command-args (command)
+(defun ezbl-command-get-args (command)
   "Extracts the arguments (as symbols) from a Uzbl command specification.
 
 For example, the spec
@@ -493,7 +493,7 @@ Would return (amount)."
       (setq start (match-end 1)))
     args))
 
-(defun ezbl-make-command-func (spec)
+(defun ezbl-command-make-func (spec)
   "Creates a function which produces the Uzbl command string described by SPEC.
 
 The function created takes a number of arguments specified by the
@@ -510,7 +510,7 @@ function when called interactively.
 See `ezbl-commands' for a description of the format of SPEC."
   (let* ((name (cdr (assq 'name spec)))
          (format (cdr (assq 'format spec)))
-         (args (ezbl-get-command-args format))
+         (args (ezbl-command-get-args format))
          (doc (cdr (assq 'doc spec)))
          (output-format (replace-regexp-in-string "<[[:alnum:]_-]+>" "%s" format))
          (interactive-spec (cdr (assq 'interactive spec)))
@@ -533,7 +533,7 @@ The function will be called `ezbl-instance-<name>', and will take
 the following (optional) arguments:
 
 INST - An object which is resolvable (through
-       `ezbl-get-instance') to an instance.
+       `ezbl-instance-get') to an instance.
 
 VALUE - If given and non-nil, sets the value of NAME to NEW-VALUE."
   (let* ((name (if (listp spec)
@@ -551,20 +551,20 @@ set." name name name))
     (fset command-name
           `(lambda (&optional inst new-value)
              ,doc
-             (let* ((instance (ezbl-get-instance inst t))
+             (let* ((instance (ezbl-instance-get inst t))
                     (elt (assq (quote ,name) instance)))
                (if new-value
                    (setcdr elt new-value)
                  (cdr elt)))))))
 
-(defun ezbl-init-commands ()
+(defun ezbl-command-init ()
   "Create Emacs functions from `ezbl-commands' and `ezbl-instance-spec'.
 
-Read through `ezbl-commands' and call `ezbl-make-command-func' on
+Read through `ezbl-commands' and call `ezbl-command-make-func' on
 each one. Also, run through `ezbl-instance-spec' and call
 `ezbl-make-instance-accessor-func' on each one."
   (interactive)
-  (append (mapcar 'ezbl-make-command-func ezbl-commands)
+  (append (mapcar 'ezbl-command-make-func ezbl-commands)
           (mapcar 'ezbl-make-instance-accessor-func ezbl-instance-spec)))
 
 (defun ezbl-init ()
@@ -574,7 +574,7 @@ For now, only the cookie handler is started."
   (unless ezbl-initialized
     (unless (featurep 'xwidget)
       (error "This version of Emacs does not support embedding windows. Please get a patched version from http://github.com/jave/emacs"))
-    (ezbl-listen-cookie-socket nil t)
+    (ezbl-cookie-socket-listen nil t)
     (setq ezbl-initialized t)))
 
 (defun ezbl-instance-start (&rest args)
@@ -708,7 +708,7 @@ This 'ezbl instance' is used in various other functions."
      ;; Return INST if the block exited normally (not using `return-from').
      inst)))
 
-(defun ezbl-get-instance (&optional inst strict)
+(defun ezbl-instance-get (&optional inst strict)
   "Returns the ezbl instance from INST.
 
 If INST is an ezbl instance, then it is returned unchanged. If it
@@ -802,7 +802,7 @@ for more info):
         (sleep-for 0 1))
       (match-string 1))))
 
-(defun ezbl-get-variable (inst var)
+(defun ezbl-variable-get (inst var)
   "Return the value of VAR from the ezbl instance INST."
   (ezbl-sync-request inst (concat "@" var)))
 
@@ -972,7 +972,7 @@ The script specific arguments are this:
     (when (equal op "GET")
       (url-cookie-generate-header-lines host path secure))))
 
-(defun ezbl-listen-cookie-socket (&optional path force)
+(defun ezbl-cookie-socket-listen (&optional path force)
   "Begin listening for Uzbl cookie requests.
 
 Creates a server process on a local socket at PATH, or
@@ -1010,7 +1010,7 @@ process and start a new one."
 (defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
 
-INST is a valid input to `ezbl-get-instance'.
+INST is a valid input to `ezbl-instance-get'.
 
 Sets the server-name parameter to the current value of `server-name'."
   (when (null ezbl-handler-path)
@@ -1042,7 +1042,7 @@ Sets the server-name parameter to the current value of `server-name'."
     (:propertize (:eval (ezbl-run-js ezbl-instance "document.title"))
                  face bold)
     " -- "
-    (:eval (ezbl-get-variable ezbl-instance "uri"))
+    (:eval (ezbl-variable-get ezbl-instance "uri"))
     "   "
     mode-line-modes
     (which-func-mode ("" which-func-format "--"))
@@ -1106,7 +1106,7 @@ entire window."
         (toggle-read-only t)
         (set-buffer-modified-p nil)))))
 
-(ezbl-init-commands)
+(ezbl-command-init)
 
 (provide 'ezbl)
 
