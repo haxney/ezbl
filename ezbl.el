@@ -983,6 +983,11 @@ process and start a new one."
                           :service sock-path
                           :family 'local)))
 
+(defun ezbl-cookie-set-handler (inst &optional path)
+  "Set Ezbl instance INST's cookie_handler to
+  `ezbl-cookie-socket' or PATH, if it's given."
+  (ezbl-command-set inst "cookie_handler" (format "talk_to_socket %s" (or path ezbl-cookie-socket))))
+
 (defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
 
