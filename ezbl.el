@@ -966,18 +966,22 @@ nil. If `ezbl-cookie-process' is non-nil, then don't create a
 process unless FORCE is non-nil, in which case kill the existing
 process and start a new one."
   (when ezbl-cookie-process
-      (unless force
-        (error "A cookie process already exists")))
+    (unless force
+      (error "A cookie process already exists")))
+
   (unless (featurep 'make-network-process '(:type seqpacket))
     (error "This version of Emacs does not support SEQPACKET sockets"))
 
-  (let* ((sock-path (or path ezbl-cookie-socket))
-         (proc (make-network-process :name "ezbl-cookie"
-                                     :type 'seqpacket
-                                     :server t
-                                     :service sock-path
-                                     :family 'local)))
-    ))
+  (let* ((sock-path (or path ezbl-cookie-socket)))
+    (when (file-exists-p sock-path)
+      (if force
+          (delete-file sock-path)
+        (error (format "Cannot listen on `%s', file exists" sock-path))))
+    (make-network-process :name "ezbl-cookie"
+                          :type 'seqpacket
+                          :server t
+                          :service sock-path
+                          :family 'local)))
 
 (defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
