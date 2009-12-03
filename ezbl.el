@@ -572,6 +572,8 @@ each one. Also, run through `ezbl-instance-spec' and call
 
 For now, only the cookie handler is started."
   (unless ezbl-initialized
+    (unless (featurep 'xwidget)
+      (error "This version of Emacs does not support embedding windows. Please get a patched version from http://github.com/jave/emacs"))
     (ezbl-listen-cookie-socket nil t)
     (setq ezbl-initialized t)))
 
