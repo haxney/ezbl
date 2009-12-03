@@ -63,6 +63,10 @@ variable.")
   "The process which is listening for cookie requests from Uzbl
 processes.")
 
+(defvar ezbl-initialized nil
+  "Keeps track of whether or not Ezbl has been initialized. This
+should be set by `ezbl-init'.")
+
 (defvar ezbl-instance-spec
   '((arguments . cons)
     (process . process)
@@ -561,6 +565,14 @@ each one. Also, run through `ezbl-instance-spec' and call
   (append (mapcar 'ezbl-make-command-func ezbl-commands)
           (mapcar 'ezbl-make-instance-accessor-func ezbl-instance-spec)))
 
+(defun ezbl-init ()
+  "Starts up the services needed for Ezbl to run.
+
+For now, only the cookie handler is started."
+  (unless ezbl-initialized
+    (ezbl-listen-cookie-socket nil t)
+    (setq ezbl-initialized t)))
+
 (defun ezbl-start (&rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
 options and values to pass to the Uzbl instance.
@@ -848,8 +860,9 @@ HEIGHT - The height of the widget"
   (when (null server-process)
     (error "Emacs server is required for Ezbl, but the server is not started."))
 
-  (when (not (fboundp 'ezbl-command-uri))
-    (ezbl-init-commands))
+  (unless ezbl-initialized
+    (ezbl-init))
+
   (switch-to-buffer (generate-new-buffer uri))
 
   ;; Currently has problems embedding into an empty buffer, so insert a space.
@@ -1053,8 +1066,9 @@ Sets the server-name parameter to the current value of `server-name'."
   (set-buffer-modified-p nil))
 
 (add-hook 'ezbl-mode-hook 'ezbl-init-handlers)
-
 (add-hook 'ezbl-mode-hook 'ezbl-update-mode-line-format)
+
+(ezbl-init-commands)
 
 (provide 'ezbl)
 
