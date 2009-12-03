@@ -955,6 +955,30 @@ Use transaction queues to enable more reliable processing."
     (when (equal op "GET")
       (url-cookie-generate-header-lines host path secure))))
 
+(defun ezbl-listen-cookie-socket (&optional path force)
+  "Begin listening for Uzbl cookie requests.
+
+Creates a server process on a local socket at PATH, or
+`ezbl-cookie-socket' if PATH is nil.
+
+Starts a process and stores it in `ezbl-cookie-process' if it is
+nil. If `ezbl-cookie-process' is non-nil, then don't create a
+process unless FORCE is non-nil, in which case kill the existing
+process and start a new one."
+  (when ezbl-cookie-process
+      (unless force
+        (error "A cookie process already exists")))
+  (unless (featurep 'make-network-process '(:type seqpacket))
+    (error "This version of Emacs does not support SEQPACKET sockets"))
+
+  (let* ((sock-path (or path ezbl-cookie-socket))
+         (proc (make-network-process :name "ezbl-cookie"
+                                     :type 'seqpacket
+                                     :server t
+                                     :service sock-path
+                                     :family 'local)))
+    ))
+
 (defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
 
