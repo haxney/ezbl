@@ -999,7 +999,8 @@ Sets the server-name parameter to the current value of `server-name'."
     (error "`ezbl-handler-path' is null, so \"handler.py\" could not be located.."))
   (mapc '(lambda (type)
            (ezbl-command-set inst type (format "spawn %s %s %s" ezbl-handler-path type server-name)))
-        ezbl-handlers))
+        ezbl-handlers)
+  (ezbl-cookie-set-handler inst))
 
 (defun ezbl-update-mode-line-format ()
   "Updates the mode-line format in each ezbl display-window
