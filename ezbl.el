@@ -50,13 +50,13 @@ Has the format:
   ((pid  . instance)
    (pid2 . instance2))
 
-See `ezbl-start' for a description of the format of the instance
+See `ezbl-instance-start' for a description of the format of the instance
 variable.")
 
 (defvar ezbl-instance nil
   "A buffer-local variable storing the current Ezbl instance.
 
-See `ezbl-start' for a description of the format of this
+See `ezbl-instance-start' for a description of the format of this
 variable.")
 
 (defvar ezbl-cookie-process nil
@@ -577,7 +577,7 @@ For now, only the cookie handler is started."
     (ezbl-listen-cookie-socket nil t)
     (setq ezbl-initialized t)))
 
-(defun ezbl-start (&rest args)
+(defun ezbl-instance-start (&rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
 options and values to pass to the Uzbl instance.
 
@@ -761,7 +761,7 @@ If INST is a buffer, use the value of
 COMMAND is a Uzbl command as described by the Uzbl
 readme (http://www.uzbl.org/readme.php).
 
-See `ezbl-start' for a description of the format of INSTANCE."
+See `ezbl-instance-start' for a description of the format of INSTANCE."
   ;; Append a newline (\n) to the end of COMMAND if one is not already there.
   (when (not (string= "\n" (substring command -1)))
     (setq command (concat command "\n")))
@@ -853,7 +853,7 @@ HEIGHT - The height of the widget"
     (cond
      ((eq xwidget-event-type 'xembed-ready)
       (let* ((xembed-id (nth 3 last-input-event)))
-        (ezbl-start :socket (number-to-string xembed-id)
+        (ezbl-instance-start :socket (number-to-string xembed-id)
                     :config "-") ;; Use stdin for config
         (run-hooks 'ezbl-xembed-ready-hook))))))
 
