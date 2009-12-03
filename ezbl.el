@@ -37,6 +37,11 @@
   :group 'ezbl
   :type 'file)
 
+(defcustom ezbl-cookie-socket "/tmp/ezbl.sock"
+  "The location of the socket through which to handle cookies."
+  :group 'ezbl
+  :type 'file)
+
 (defvar ezbl-instances nil
   "A list of Uzbl instances.
 
@@ -53,6 +58,10 @@ variable.")
 
 See `ezbl-start' for a description of the format of this
 variable.")
+
+(defvar ezbl-cookie-process nil
+  "The process which is listening for cookie requests from Uzbl
+processes.")
 
 (defvar ezbl-instance-spec
   '((arguments . cons)
