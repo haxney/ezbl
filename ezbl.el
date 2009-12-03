@@ -483,7 +483,7 @@ Would return (amount)."
   (let ((start 0)
         (args nil))
     (while (string-match "<\\([[:alnum:]_-]+\\)>" command start)
-      (setq args (append (list (intern (match-string 1 command))) args))
+      (setq args (add-to-list 'args (intern (match-string 1 command)) t))
       (setq start (match-end 1)))
     args))
 
