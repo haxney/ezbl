@@ -976,11 +976,13 @@ process and start a new one."
       (if force
           (delete-file sock-path)
         (error (format "Cannot listen on `%s', file exists" sock-path))))
+
     (make-network-process :name "ezbl-cookie"
                           :type 'seqpacket
                           :server t
                           :service sock-path
-                          :family 'local)))
+                          :family 'local
+                          :sentinel 'ezbl-cookie-sentinel)))
 
 (defun ezbl-cookie-set-handler (inst &optional path)
   "Set Ezbl instance INST's cookie_handler to
