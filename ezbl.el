@@ -75,6 +75,14 @@ should be set by `ezbl-init'.")
     (display-buffer . buffer))
   "An alist of required keys and their types in an `ezbl-instance'.")
 
+(defstruct ezbl-inst
+  "A structure containing the properties of an Ezbl instance."
+  arguments
+  process
+  pid
+  output-buffer
+  display-buffer)
+
 (defconst ezbl-output-buffer-format " *ezbl-output-%s*"
   "The format used for transforming ezbl instance names into
 buffer names.")
