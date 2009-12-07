@@ -673,7 +673,7 @@ Returns an ezbl-instance."
   (let ((instance
          (cond
           ;; Is an instance.
-          ((ezbl-instance-p inst))
+          ((ezbl-inst-p inst))
           ;; Is a buffer.
           ((bufferp inst)
            (with-current-buffer inst
@@ -712,7 +712,7 @@ See `ezbl-start' for a description of the format of INSTANCE."
   ;; Append a newline (\n) to the end of COMMAND if one is not already there.
   (when (not (string= "\n" (substring command -1)))
     (setq command (concat command "\n")))
-  (process-send-string (ezbl-instance-process inst) command))
+  (process-send-string (ezbl-inst-process inst) command))
 
 (defun ezbl-sync-request (inst req)
   "Request Uzl to evaluate a request string REQ and wait for the result.
@@ -737,7 +737,7 @@ for more info):
 
   @[xml]@: Escapes any XML in the brackets."
   (let ((tag (sha1 (int-to-string (random)))))
-    (with-current-buffer (ezbl-instance-output-buffer inst)
+    (with-current-buffer (ezbl-inst-output-buffer inst)
       (ezbl-command-print inst
                           (format "%s{%s}%s" tag req tag))
       (goto-char (point-max))
@@ -881,7 +881,7 @@ The script specific arguments are this:
          (socket-filename (nth 4 args))
          (current-url (nth 5 args))
          (current-title (nth 6 args))
-         (buffer (ezbl-instance-display-buffer pid)))
+         (buffer (ezbl-inst-display-buffer pid)))
     (with-current-buffer buffer
       (cond
        ((equal type "load_finish_handler"))
@@ -971,7 +971,7 @@ Sets the server-name parameter to the current value of `server-name'."
   "Updates the mode-line format in each ezbl display-window
   according to `ezbl-mode-line-format'."
   (mapc '(lambda (inst)
-           (with-current-buffer (ezbl-instance-display-buffer (car inst))
+           (with-current-buffer (ezbl-inst-display-buffer (car inst))
              (setq mode-line-format ezbl-mode-line-format)))
         ezbl-instances))
 
@@ -1039,7 +1039,7 @@ property/xwidget id impedance mismatch.
 (defun ezbl-fill-window (&optional inst)
   "Re-sizes the xwidget in the display-buffer of INST to fill its
 entire window."
-  (let ((buffer (ezbl-instance-display-buffer inst)))
+  (let ((buffer (ezbl-inst-display-buffer inst)))
     (with-current-buffer buffer
       (let* ((edges-list (window-inside-pixel-edges (get-buffer-window buffer)))
              (left (nth 0 edges-list))
