@@ -681,7 +681,7 @@ Returns an ezbl-instance."
              ezbl-instance))
           ;; Is a pid.
           ((integerp inst)
-           (cdr (assq inst
+           (cdr-safe (assq inst
                       ezbl-instances)))
           ;; Is the name of a buffer.
           ((stringp inst)
