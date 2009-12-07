@@ -627,11 +627,12 @@ Returns an `ezbl-inst' struct."
                                 program-args)))
            (pid (process-id proc)))
 
-      (setq inst (make-ezbl-inst program-args       ;; args
-                                 proc               ;; process
-                                 pid                ;; pid
-                                 output-buffer      ;; output-buffer
-                                 (current-buffer))) ;; display-buffer
+      (setq inst (make-ezbl-inst
+                  :args program-args
+                  :process proc
+                  :pid pid
+                  :output-buffer output-buffer
+                  :display-buffer (current-buffer)))
 
       (with-current-buffer output-buffer
         (rename-buffer (format ezbl-output-buffer-format (int-to-string pid)))
