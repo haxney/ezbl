@@ -576,15 +576,7 @@ The following keywords are used:
 :display DISPLAY
         X display to use
 
-Returns an ezbl instance alist of the form:
-
-  ((arguments . (\"--option1\" \"value\" \"--switch\"))
-   (process . #<process ezbl-process>)
-   (pid . 16555)
-   (output-buffer . #<buffer  *ezbl-output-16555*>)
-   (display-buffer . #<buffer *ezbl-display-16555*>))
-
-This 'ezbl instance' is used in various other functions."
+Returns an `ezbl-inst' struct."
   (let (program-args)
     ;; Process keywords
     (while args
