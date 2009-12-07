@@ -654,27 +654,7 @@ This 'ezbl instance' is used in various other functions."
       (ezbl-mode)
       instance)))
 
-(defun ezbl-instance-p (inst)
-  "Return t if INST is an ezbl-instance."
-  (and
-   (consp inst)
-   (consp (car inst))
-   ;; Check that each element of `ezbl-instance-spec' matches the key and type
-   ;; of an association in INST.
-   (block spec-check
-     (mapc '(lambda (spec)
-              (let* ((key-name (car spec))
-                     (expected-type (cdr spec))
-                     (elt (assq key-name inst)))
-                (when (null elt)
-                  (return-from spec-check))
-                (when (not (eq expected-type (type-of (cdr elt))))
-                  (return-from spec-check))))
-           ezbl-instance-spec)
-     ;; Return INST if the block exited normally (not using `return-from').
-     inst)))
-
-(defun ezbl-get-instance (&optional inst strict)
+(defun ezbl-get-inst (&optional inst strict)
   "Returns the ezbl instance from INST.
 
 If INST is an ezbl instance, then it is returned unchanged. If it
@@ -710,13 +690,15 @@ Returns an ezbl-instance."
                                  ezbl-instance))))
                (with-current-buffer inst
                  ezbl-instance)
-             ;; Is the name of an instance, so open the output buffer named "*ezbl-name*"
-             (with-current-buffer (format ezbl-output-buffer-format inst)
-               ezbl-instance))))))
+             ;; Is the name of an instance, so open the output buffer which
+             ;; corresponds to this name.
+             (when (get-buffer (format ezbl-output-buffer-format inst))
+               (with-current-buffer (format ezbl-output-buffer-format inst)
+                 ezbl-instance)))))))
     (when (and strict
-               (not (ezbl-instance-p instance)))
-      (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance." inst)))
-    (ezbl-instance-p instance)))
+               (not (ezbl-inst-p instance)))
+      (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst)))
+    (ezbl-inst-p instance)))
 
 (defun ezbl-exec-command (inst command)
   "Sends the string COMMAND to the Uzbl instance INST.
