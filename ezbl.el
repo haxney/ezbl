@@ -574,6 +574,8 @@ For now, only the cookie handler is started."
   (unless ezbl-initialized
     (unless (featurep 'xwidget)
       (error "This version of Emacs does not support embedding windows. Please get a patched version from http://github.com/jave/emacs"))
+    (unless (featurep 'make-network-process '(:type seqpacket))
+      (error "This version of Emacs does not support SEQPACKET sockets"))
     (ezbl-cookie-socket-listen nil t)
     (setq ezbl-initialized t)))
 
@@ -985,9 +987,6 @@ process and start a new one."
   (when ezbl-cookie-process
     (unless force
       (error "A cookie process already exists")))
-
-  (unless (featurep 'make-network-process '(:type seqpacket))
-    (error "This version of Emacs does not support SEQPACKET sockets"))
 
   (let* ((sock-path (or path ezbl-cookie-socket)))
     (when (file-exists-p sock-path)
