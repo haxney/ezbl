@@ -1106,6 +1106,21 @@ entire window."
         (toggle-read-only t)
         (set-buffer-modified-p nil)))))
 
+(defun ezbl-event-listener (inst answer)
+  "Respond to a transaction queue answer.
+
+INST should be the `ezbl-instance' of the associated Uzbl process
+and ANSWER is the string returned by the process."
+  (message "my-msg, clo=`%s', ans=`%s'" inst answer)
+  (tq-enqueue (ezbl-instance-tq inst) )
+  )
+
+(defun ezbl-event-create-tq (inst)
+  "Create a transaction queue for INST.
+
+Appends the tq to INST."
+  (append (ezbl-get-instance inst) (tq-create (ezbl-instance-process inst))))
+
 (ezbl-init-commands)
 
 (provide 'ezbl)
