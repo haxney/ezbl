@@ -67,13 +67,6 @@ processes.")
   "Keeps track of whether or not Ezbl has been initialized. This
 should be set by `ezbl-init'.")
 
-(defvar ezbl-instance-spec
-  '((arguments . cons)
-    (process . process)
-    (pid . integer)
-    (output-buffer . buffer)
-    (display-buffer . buffer))
-  "An alist of required keys and their types in an `ezbl-instance'.")
 
 (defstruct ezbl-inst
   "A structure containing the properties of an Ezbl instance."
@@ -532,48 +525,13 @@ See `ezbl-commands' for a description of the format of SPEC."
              ,(when interactive-spec `(interactive ,interactive-spec))
              (ezbl-exec-command inst (format ,output-format ,@args))))))
 
-(defun ezbl-make-instance-accessor-func (spec)
-  "Creates an accessor function for the given symbol.
-
-If SPEC is a list, the car is used for the key name.
-
-The function will be called `ezbl-instance-<name>', and will take
-the following (optional) arguments:
-
-INST - An object which is resolvable (through
-       `ezbl-get-instance') to an instance.
-
-VALUE - If given and non-nil, sets the value of NAME to NEW-VALUE."
-  (let* ((name (if (listp spec)
-                   (car spec)
-                 spec))
-         (doc (format "Get (or set) the value of %s from INST.
-
-If INST is nil, the value of `ezbl-instance' in the current
-buffer is used. If NEW-VALUE is non-nil, then the value of %s in INST
-is set to NEW-VALUE.
-
-Returns the value of %s in INST, or the new value, if it has been
-set." name name name))
-         (command-name (intern (format "ezbl-instance-%s" name))))
-    (fset command-name
-          `(lambda (&optional inst new-value)
-             ,doc
-             (let* ((instance (ezbl-get-instance inst t))
-                    (elt (assq (quote ,name) instance)))
-               (if new-value
-                   (setcdr elt new-value)
-                 (cdr elt)))))))
-
 (defun ezbl-init-commands ()
-  "Create Emacs functions from `ezbl-commands' and `ezbl-instance-spec'.
+  "Create Emacs functions from `ezbl-commands'.
 
 Read through `ezbl-commands' and call `ezbl-make-command-func' on
-each one. Also, run through `ezbl-instance-spec' and call
-`ezbl-make-instance-accessor-func' on each one."
+each one."
   (interactive)
-  (append (mapcar 'ezbl-make-command-func ezbl-commands)
-          (mapcar 'ezbl-make-instance-accessor-func ezbl-instance-spec)))
+  (append (mapcar 'ezbl-make-command-func ezbl-commands)))
 
 (defun ezbl-init ()
   "Starts up the services needed for Ezbl to run.
