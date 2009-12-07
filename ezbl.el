@@ -687,10 +687,11 @@ Returns an ezbl-inst."
              (when (get-buffer (format ezbl-output-buffer-format inst))
                (with-current-buffer (format ezbl-output-buffer-format inst)
                  ezbl-inst)))))))
-    (when (and strict
-               (not (ezbl-inst-p instance)))
-      (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst)))
-    (ezbl-inst-p instance)))
+    (if (ezbl-inst-p instance)
+        instance
+      (if strict
+          (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))
+        nil))))
 
 (defun ezbl-exec-command (inst command)
   "Sends the string COMMAND to the Uzbl instance INST.
