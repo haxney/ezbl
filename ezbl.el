@@ -42,7 +42,7 @@
   :group 'ezbl
   :type 'file)
 
-(defvar ezbl-instances nil
+(defvar ezbl-inst-list nil
   "A list of Uzbl instances.
 
 Has the format:
@@ -53,7 +53,7 @@ Has the format:
 See `ezbl-start' for a description of the format of the instance
 variable.")
 
-(defvar ezbl-instance nil
+(defvar ezbl-inst nil
   "A buffer-local variable storing the current Ezbl instance.
 
 See `ezbl-start' for a description of the format of this
@@ -643,12 +643,12 @@ This 'ezbl instance' is used in various other functions."
 
       (with-current-buffer output-buffer
         (rename-buffer (format ezbl-output-buffer-format (int-to-string pid)))
-        (set (make-local-variable 'ezbl-instance) inst))
+        (set (make-local-variable 'ezbl-inst) inst))
       (rename-buffer (format ezbl-display-buffer-format pid))
-      (set (make-local-variable 'ezbl-instance) inst)
+      (set (make-local-variable 'ezbl-inst) inst)
 
-      ;; Make `ezbl-instance' survive `kill-all-local-variables'
-      (put 'ezbl-instance 'permanent-local t)
+      ;; Make `ezbl-inst' survive `kill-all-local-variables'
+      (put 'ezbl-inst 'permanent-local t)
 
       (ezbl-mode)
       inst)))
@@ -657,18 +657,18 @@ This 'ezbl instance' is used in various other functions."
   "Returns the ezbl instance from INST.
 
 If INST is an ezbl instance, then it is returned unchanged. If it
-is a buffer, then the local variable of `ezbl-instance' is
-returned. If it is an integer, then `ezbl-instances' is searched
+is a buffer, then the local variable of `ezbl-inst' is
+returned. If it is an integer, then `ezbl-inst-list' is searched
 for an instance with a matching pid. If it is nil or not
-supplied, then the value of `ezbl-instance' in the current buffer
+supplied, then the value of `ezbl-inst' in the current buffer
 is returned.
 
 If STRICT is non-nil, raise an error if INST is not resolvable to
 an instance.
 
-Returns an ezbl-instance."
+Returns an ezbl-inst."
   (when (null inst)
-    (set 'inst ezbl-instance))
+    (set 'inst ezbl-inst))
 
   (let ((instance
          (cond
@@ -677,23 +677,23 @@ Returns an ezbl-instance."
           ;; Is a buffer.
           ((bufferp inst)
            (with-current-buffer inst
-             ezbl-instance))
+             ezbl-inst))
           ;; Is a pid.
           ((integerp inst)
            (cdr-safe (assq inst
-                      ezbl-instances)))
+                      ezbl-inst-list)))
           ;; Is the name of a buffer.
           ((stringp inst)
            (if (and (bufferp (get-buffer inst))
                     (not (null (with-current-buffer inst
-                                 ezbl-instance))))
+                                 ezbl-inst))))
                (with-current-buffer inst
-                 ezbl-instance)
+                 ezbl-inst)
              ;; Is the name of an instance, so open the output buffer which
              ;; corresponds to this name.
              (when (get-buffer (format ezbl-output-buffer-format inst))
                (with-current-buffer (format ezbl-output-buffer-format inst)
-                 ezbl-instance)))))))
+                 ezbl-inst)))))))
     (when (and strict
                (not (ezbl-inst-p instance)))
       (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst)))
@@ -703,7 +703,7 @@ Returns an ezbl-instance."
   "Sends the string COMMAND to the Uzbl instance INST.
 
 If INST is a buffer, use the value of
-`ezbl-instance' in that buffer. If
+`ezbl-inst' in that buffer. If
 
 COMMAND is a Uzbl command as described by the Uzbl
 readme (http://www.uzbl.org/readme.php).
@@ -825,7 +825,7 @@ HEIGHT - The height of the widget"
 
   (add-hook 'ezbl-xembed-ready-hook
             `(lambda ()
-               (ezbl-command-uri ezbl-instance ,uri))
+               (ezbl-command-uri ezbl-inst ,uri))
             nil
             t)
   (put 'ezbl-xembed-ready-hook 'permanent-local t)
@@ -973,7 +973,7 @@ Sets the server-name parameter to the current value of `server-name'."
   (mapc '(lambda (inst)
            (with-current-buffer (ezbl-inst-display-buffer (car inst))
              (setq mode-line-format ezbl-mode-line-format)))
-        ezbl-instances))
+        ezbl-inst-list))
 
 (defun ezbl-set-mode-line-format (symbol value)
   "Used for setting `ezbl-mode-line-format'; sets SYMBOL's value
@@ -986,10 +986,10 @@ Sets the server-name parameter to the current value of `server-name'."
     mode-line-mule-info
     mode-line-modified
     mode-line-frame-identification
-    (:propertize (:eval (ezbl-run-js ezbl-instance "document.title"))
+    (:propertize (:eval (ezbl-run-js ezbl-inst "document.title"))
                  face bold)
     " -- "
-    (:eval (ezbl-get-variable ezbl-instance "uri"))
+    (:eval (ezbl-get-variable ezbl-inst "uri"))
     "   "
     mode-line-modes
     (which-func-mode ("" which-func-format "--"))
