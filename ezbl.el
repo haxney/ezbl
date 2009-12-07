@@ -70,7 +70,7 @@ should be set by `ezbl-init'.")
 
 (defstruct ezbl-inst
   "A structure containing the properties of an Ezbl instance."
-  arguments
+  args
   process
   pid
   output-buffer
