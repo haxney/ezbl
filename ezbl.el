@@ -585,8 +585,7 @@ Returns an ezbl instance alist of the form:
    (display-buffer . #<buffer *ezbl-display-16555*>))
 
 This 'ezbl instance' is used in various other functions."
-  (let ((program-args nil)
-        (instance `((display-buffer . ,(current-buffer)))))
+  (let (program-args)
     ;; Process keywords
     (while args
       (let ((arg (car args)))
@@ -626,7 +625,8 @@ This 'ezbl instance' is used in various other functions."
             (setq program-args (append program-args (list "--display") (list value))))))))
 
     ;; Start process
-    (let* ((proc-name "ezbl-process")
+    (let* (inst
+           (proc-name "ezbl-process")
            (output-buffer (generate-new-buffer "*ezbl-output*"))
            (proc (apply 'start-process
                         (append (list proc-name
@@ -635,24 +635,23 @@ This 'ezbl instance' is used in various other functions."
                                 program-args)))
            (pid (process-id proc)))
 
-      (setq instance (append `((arguments . ,program-args)
-                               (process . ,proc)
-                               (pid . ,pid)
-                               (output-buffer . ,output-buffer))
-                             instance))
+      (setq inst (make-ezbl-inst program-args       ;; args
+                                 proc               ;; process
+                                 pid                ;; pid
+                                 output-buffer      ;; output-buffer
+                                 (current-buffer))) ;; display-buffer
 
       (with-current-buffer output-buffer
         (rename-buffer (format ezbl-output-buffer-format (int-to-string pid)))
-        (set (make-local-variable 'ezbl-instance) instance))
+        (set (make-local-variable 'ezbl-instance) inst))
       (rename-buffer (format ezbl-display-buffer-format pid))
-      (set (make-local-variable 'ezbl-instance) instance)
+      (set (make-local-variable 'ezbl-instance) inst)
 
       ;; Make `ezbl-instance' survive `kill-all-local-variables'
       (put 'ezbl-instance 'permanent-local t)
 
-      (add-to-list 'ezbl-instances `(,pid . ,instance))
       (ezbl-mode)
-      instance)))
+      inst)))
 
 (defun ezbl-get-inst (&optional inst strict)
   "Returns the ezbl instance from INST.
