@@ -74,7 +74,17 @@ should be set by `ezbl-init'.")
   process
   pid
   output-buffer
-  display-buffer)
+  display-buffer
+  tq)
+
+(defconst ezbl-inst-slots
+  '(args
+    process
+    pid
+    output-buffer
+    display-buffer
+    tq)
+  "A list of the slot names in the `ezbl-inst' structure.")
 
 (defconst ezbl-get-inst-first
   '(ezbl-get-inst-first
@@ -84,14 +94,6 @@ should be set by `ezbl-init'.")
                 (ad-set-arg 0 (ezbl-get-inst (ad-get-arg 0))))))
   "Computed advice to apply to each of the `ezbl-inst' slot
 accessors.")
-
-(defconst ezbl-inst-slots
-  '(args
-    process
-    pid
-    output-buffer
-    display-buffer)
-  "A list of the slot names in the `ezbl-inst' structure.")
 
 (defconst ezbl-output-buffer-format " *ezbl-output-%s*"
   "The format used for transforming ezbl instance names into
@@ -648,7 +650,8 @@ Returns an `ezbl-inst' struct."
                   :process proc
                   :pid pid
                   :output-buffer output-buffer
-                  :display-buffer (current-buffer)))
+                  :display-buffer (current-buffer)
+                  :tq (tq-create proc)))
 
       (with-current-buffer output-buffer
         (rename-buffer (format ezbl-output-buffer-format (int-to-string pid)))
