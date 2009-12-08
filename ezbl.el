@@ -1087,7 +1087,7 @@ entire window."
 INST should be the `ezbl-instance' of the associated Uzbl process
 and ANSWER is the string returned by the process."
   (message "my-msg, clo=`%s', ans=`%s'" inst answer)
-  (tq-enqueue (ezbl-instance-tq inst) )
+  (tq-enqueue (ezbl-inst-tq inst) "" "^EVENT \\[[0-9]+\\]" inst 'ezbl-event-listener)
   )
 
 (ezbl-init-commands)
