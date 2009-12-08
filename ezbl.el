@@ -930,18 +930,13 @@ The script specific arguments are this:
        (t
         (error (format "Unknown callback type '%s' received." type)))))))
 
-(defun ezbl-cookie-sentinel (process event)
+(defun ezbl-cookie-listener (proc answer)
   "Handle a cookie request over a socket."
-  (when (string-match-p "^open" event)
-    (accept-process-output process)
-    (let* ((buffer (process-buffer process))
-           (answer (with-current-buffer buffer
-                     (buffer-string)))
-           (args (split-string answer "\0"))
-           (result (apply 'ezbl-cookie-handler args)))
-      (when (and result
-                 (> 0 (length (split-string result))))
-        (process-send-string process result)))))
+  (let* ((args (split-string answer "\0"))
+         (result (apply 'ezbl-cookie-handler args)))
+    (when (and result
+               (> 0 (length (split-string result))))
+      (process-send-string proc result))))
 
 (defun ezbl-cookie-handler (op scheme host path &optional data &rest ignored)
   (let ((secure (if (equal scheme "https")
@@ -978,7 +973,7 @@ process and start a new one."
                           :server t
                           :service sock-path
                           :family 'local
-                          :sentinel 'ezbl-cookie-sentinel)))
+                          :filter 'ezbl-cookie-listener)))
 
 (defun ezbl-cookie-set-handler (inst &optional path)
   "Set Ezbl instance INST's cookie_handler to
