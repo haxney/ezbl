@@ -936,7 +936,8 @@ The script specific arguments are this:
          (result (apply 'ezbl-cookie-handler args)))
     (when (and result
                (> 0 (length (split-string result))))
-      (process-send-string proc result))))
+      (process-send-string proc result))
+    (process-send-eof proc)))
 
 (defun ezbl-cookie-handler (op scheme host path &optional data &rest ignored)
   (let ((secure (if (equal scheme "https")
