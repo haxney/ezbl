@@ -3,7 +3,7 @@
 ;; Author: Daniel Hackney
 ;; Copyright (C) 2009 Daniel Hackney
 ;; Version: 0.3
-;; URL: http://github.com/dhax/ezbl/tree/master
+;; URL: http://github.com/dhax/ezbl
 
 ;; This file is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software
@@ -20,8 +20,8 @@
 
 ;;; Commentary:
 ;;
-;;  Uzbl version 2009.07.18 or greater is required. It has not been tested with
-;;  other versions.
+;;  Uzbl version 2009.11.30 or greater is required. Ezbl will not work with
+;;  older versions.
 ;;
 ;;  Run `ezbl-open' to start a Uzbl instance and browse to a URL. Also, check
 ;;  `ezbl-mode' for a listing of the key bindings of Ezbl.
@@ -32,32 +32,30 @@
 
 (defgroup ezbl nil "Settings for Ezbl, the Emacs frontend for Uzbl.")
 
-(defcustom ezbl-exec-path "/usr/bin/uzbl"
+(defcustom ezbl-exec-path "/usr/bin/uzbl-core"
   "The location of the Uzbl executable."
   :group 'ezbl
   :type 'file)
 
-(defcustom ezbl-cookie-socket "/tmp/ezbl.sock"
+(defcustom ezbl-cookie-socket "/tmp/ezbl-cookies"
   "The location of the socket through which to handle cookies."
   :group 'ezbl
   :type 'file)
 
 (defvar ezbl-inst-list nil
-  "A list of Uzbl instances.
+  "An alist of Uzbl instances and their pids.
 
 Has the format:
 
   ((pid  . instance)
    (pid2 . instance2))
 
-See `ezbl-inst-start' for a description of the format of the instance
-variable.")
+The values are instances of the `ezbl-inst' struct.")
 
 (defvar ezbl-inst nil
   "A buffer-local variable storing the current Ezbl instance.
 
-See `ezbl-inst-start' for a description of the format of this
-variable.")
+It is an instance of the `ezbl-inst' struct.")
 
 (defvar ezbl-cookie-process nil
   "The process which is listening for cookie requests from Uzbl
@@ -65,7 +63,7 @@ processes.")
 
 (defvar ezbl-initialized nil
   "Keeps track of whether or not Ezbl has been initialized. This
-should be set by `ezbl-init'.")
+should only be set by `ezbl-init'.")
 
 
 (defstruct ezbl-inst
@@ -478,7 +476,9 @@ All variables must be enclosed in angle brackets.")
   "Counter for xwidget IDs. IDs must be unique, or Emacs will crash.")
 
 (defconst ezbl-xwidget-type 3
-  "The type attribute for xwidget embedded widgets.")
+  "The type attribute for xwidget embedded widgets.
+
+Don't ask me why this is.")
 
 (defvar ezbl-xembed-ready-hook nil
   "Commands to run when an ezbl instance receives the
@@ -679,21 +679,17 @@ Returns an `ezbl-inst'."
 
   (let ((instance
          (cond
-          ;; Is an instance.
           ((ezbl-inst-p inst)
            inst)
-          ;; Is a buffer.
           ((bufferp inst)
            (with-current-buffer inst
              ezbl-inst))
-          ;; Is a pid.
           ((integerp inst)
            (cdr-safe (assq inst
                            ezbl-inst-list)))
           ((processp inst)
            (cdr-safe (assq (process-id inst)
                            ezbl-inst-list)))
-          ;; Is the name of a buffer.
           ((stringp inst)
            (if (and (bufferp (get-buffer inst))
                     (not (null (with-current-buffer inst
@@ -707,9 +703,8 @@ Returns an `ezbl-inst'."
                  ezbl-inst)))))))
     (if (ezbl-inst-p instance)
         instance
-      (if strict
-          (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))
-        nil))))
+      (when strict
+          (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))))))
 
 (defun ezbl-inst-define-advice ()
   "Define and activate the advice for each slot in `ezbl-inst'.
@@ -731,7 +726,7 @@ If INST is a buffer, use the value of
 `ezbl-inst' in that buffer. If
 
 COMMAND is a Uzbl command as described by the Uzbl
-readme (http://www.uzbl.org/readme.php).
+Readme (http://www.uzbl.org/readme.php).
 
 See `ezbl-inst-start' for a description of the format of INST."
   ;; Append a newline (\n) to the end of COMMAND if one is not already there.
@@ -801,7 +796,10 @@ HEIGHT - The height of the widget"
      (list 'xwidget ':xwidget-id id ':type type ':title title ':width width ':height height))))
 
 (defun ezbl-embed ()
-  "Embed the Uzbl window specified by NAME in its buffer."
+  "Insert an xwidget into the current buffer.
+
+Also, set a callback (using the xwidget-event \"keybinding\") to
+launch Uzbl once the widget is fully initialized."
   (save-excursion
     (use-local-map (make-sparse-keymap))
     (define-key (current-local-map) [(xwidget-event)] 'ezbl-xwidget-handler)
@@ -818,7 +816,10 @@ HEIGHT - The height of the widget"
   (incf ezbl-xwidget-id-counter))
 
 (defun ezbl-xwidget-handler ()
-  "Handle an xwidget event (such as when it is initialized."
+  "Respond to the creation of an xwidget.
+
+Once the xwidget is set up, start a Uzbl process and give it the
+xwidget's socket id."
   (interactive)
   (let* ((xwidget-event-type (nth 2 last-input-event))
          (xwidget-id (nth 1 last-input-event)))
@@ -830,7 +831,7 @@ HEIGHT - The height of the widget"
         (run-hooks 'ezbl-xembed-ready-hook))))))
 
 (defun ezbl-open (uri)
-  "Create a new instance in its own buffer and browse to URI."
+  "Create a new Uzbl instance in a new buffer and browse to URI."
   (interactive "sUri: ")
 
   (ezbl-init)
@@ -912,13 +913,14 @@ process and start a new one."
 
 (defun ezbl-cookie-set-handler (&optional inst path)
   "Set Ezbl instance INST's cookie_handler to
-  `ezbl-cookie-socket' or PATH, if it's given."
+`ezbl-cookie-socket' or PATH, if it's given."
   (ezbl-command-set inst "cookie_handler"
                     (format "talk_to_socket %s" (or path ezbl-cookie-socket))))
 
 (defun ezbl-update-mode-line-format ()
-  "Updates the mode-line format in each ezbl display-window
-  according to `ezbl-mode-line-format'."
+  "Updates the mode-line format in each ezbl display-window,
+
+according to `ezbl-mode-line-format'."
   (mapc '(lambda (inst)
            (with-current-buffer (ezbl-inst-display-buffer (car inst))
              (setq mode-line-format ezbl-mode-line-format)))
@@ -926,7 +928,7 @@ process and start a new one."
 
 (defun ezbl-set-mode-line-format (symbol value)
   "Used for setting `ezbl-mode-line-format'; sets SYMBOL's value
-  to VALUE and runs `ezbl-update-mode-line-format'."
+to VALUE and runs `ezbl-update-mode-line-format'."
   (set-default symbol value)
   (ezbl-update-mode-line-format))
 
@@ -961,7 +963,8 @@ process and start a new one."
   "Keymap for `ezbl-mode'.")
 
 (define-derived-mode ezbl-mode nil "Ezbl"
-  "Mode for interacting with Ezbl processes
+  "Mode for interacting with Ezbl processes.
+
 \\{ezbl-mode-map}"
   :group 'ezbl
   (toggle-read-only t)
@@ -974,9 +977,9 @@ process and start a new one."
 
 (defun ezbl-xwidget-resize-at (pos width height)
   "Resize xwidget at postion POS to WIDTH and HEIGHT.
-theres no corresponding resize-id fn yet, because of display
-property/xwidget id impedance mismatch.
-"
+
+There is no corresponding resize-id fn yet, because of display
+property/xwidget id impedance mismatch."
   (let* ((xwidget-prop (cdr (get-text-property pos 'display)))
          (id (plist-get  xwidget-prop ':xwidget-id)))
 
@@ -998,6 +1001,8 @@ entire window."
              (bottom (nth 3 edges-list))
              (height (- bottom top))
              (width (- right left)))
+        ;; Turn read-only off while modifying the size of the xwidget, then
+        ;; reactivate it.
         (toggle-read-only -1)
         (ezbl-xwidget-resize-at 1 width height)
         (toggle-read-only t)
@@ -1008,10 +1013,9 @@ entire window."
 
 INST should be the `ezbl-inst' of the associated Uzbl process
 and ANSWER is the string returned by the process."
-
   (let ((answers (split-string answer "\n" t)))
     (dolist (ans answers)
-      (if (string-match "^EVENT \\[\\([0-9]+\\)\\] \\([A-Z_]+\\) ?\\(.*\\)$" ans)
+      (if (string-match "^EVENT \\[\\([[:alnum:]]+\\)\\] \\([A-Z_]+\\) ?\\(.*\\)$" ans)
           (let ((app-name (match-string-no-properties 1 ans))
                 (event (intern (match-string-no-properties 2 ans)))
                 (detail (match-string-no-properties 3 ans)))
