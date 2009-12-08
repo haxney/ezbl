@@ -1148,7 +1148,7 @@ INST is resolvable to an ezbl instance."
    ;; ((eq event 'ROOT_ACTIVE))
    ;; ((eq event 'FILE_INCLUDED))
    ((eq event 'PLUG_CREATED))
-   ;; ((eq event 'BUILTINS))
+   ((eq event 'BUILTINS))
    (t
     (ezbl-process-append inst (format "EVENT [%s] %s %s\n" app-name event detail)))
   ))
