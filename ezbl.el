@@ -75,7 +75,7 @@ should be set by `ezbl-init'.")
   pid
   output-buffer
   display-buffer
-  tq)
+  vars)
 
 (defconst ezbl-inst-slots
   '(args
@@ -83,7 +83,7 @@ should be set by `ezbl-init'.")
     pid
     output-buffer
     display-buffer
-    tq)
+    vars)
   "A list of the slot names in the `ezbl-inst' structure.")
 
 (defconst ezbl-get-inst-first
@@ -651,7 +651,8 @@ Returns an `ezbl-inst' struct."
                   :pid pid
                   :output-buffer output-buffer
                   :display-buffer (current-buffer)
-                  :tq (tq-create proc)))
+                  :vars (make-hash-table)))
+      (set-process-filter proc 'ezbl-event-listener)
 
       (with-current-buffer output-buffer
         (rename-buffer (format ezbl-output-buffer-format (int-to-string pid)))
@@ -1085,12 +1086,70 @@ entire window."
         (set-buffer-modified-p nil)))))
 
 (defun ezbl-event-listener (inst answer)
-  "Respond to a transaction queue answer.
+  "Filter for ezbl processes.
 
-INST should be the `ezbl-instance' of the associated Uzbl process
+INST should be the `ezbl-inst' of the associated Uzbl process
 and ANSWER is the string returned by the process."
-  (message "my-msg, clo=`%s', ans=`%s'" inst answer)
-  (tq-enqueue (ezbl-inst-tq inst) "" "^EVENT \\[[0-9]+\\]" inst 'ezbl-event-listener)
+  (with-current-buffer (ezbl-inst-output-buffer inst)
+    (insert answer))
+  (let ((answers (split-string answer "\n" t)))
+    (dolist (ans answers)
+      (if (string-match "^EVENT \\[\\([0-9]+\\)\\] \\([A-Z_]+\\) ?\\(.*\\)$" ans)
+          (let ((app-id (match-string-no-properties 1 ans))
+                (event (intern (match-string-no-properties 2 ans)))
+                (detail (match-string-no-properties 3 ans)))
+            (ezbl-event-handler inst event detail))
+;        (message "not-matched: `%s'" ans)
+        ))))
+
+(defun ezbl-event-handler (inst event detail)
+  "Respond to a Uzbl-generated event.
+
+EVENT is the interned symbol of the event Uzbl returned, while
+DETAIL is a (possibly-empty) string containing any additional
+information included with the event.
+
+INST is resolvable to an ezbl instance."
+  (cond
+   ((eq event 'INSTANCE_START)) ; Ignored
+   ((eq event 'INSTANCE_EXIT)) ; Close process and stuff
+   ((eq event 'VARIABLE_SET)
+    (if (string-match "\\([a-z0-9_]+\\) \\(str\\|int\\|float\\) \\(.*\\)" detail)
+        (let ((var-name (intern (match-string-no-properties 1 detail)))
+              (type (match-string-no-properties 2 detail))
+              (value (match-string-no-properties 3 detail)))
+          (puthash var-name value (ezbl-inst-vars inst)))
+      (error "VARIABLE_SET event had invalid details: `%s'" detail)))
+   ((eq event 'COMMAND_EXECUTED))
+   ((eq event 'COMMAND_ERROR))
+   ((eq event 'GEOMETRY_CHANGED))
+   ((eq event 'FIFO_SET))
+   ((eq event 'SOCKET_SET))
+   ((eq event 'LOAD_COMMIT)
+    (puthash 'uri detail (ezbl-inst-vars inst)))
+   ((eq event 'LOAD_START))
+   ((eq event 'LOAD_FINISHED))
+   ((eq event 'LOAD_ERROR))
+   ((eq event 'LOAD_PROGRESS))
+   ((eq event 'TITLE_CHANGED)
+    (puthash 'title detail (ezbl-inst-vars inst)))
+   ((eq event 'DOWNLOAD_REQUEST))
+   ((eq event 'LINK_HOVER))
+   ((eq event 'LINK_UNHOVER))
+   ((eq event 'KEY_PRESS))
+   ((eq event 'KEY_RELEASE))
+   ((eq event 'SELECTION_CHANGED))
+   ((eq event 'NEW_WINDOW))
+   ((eq event 'WEBINSPECTOR))
+   ((eq event 'WEBINSPECTOR))
+   ((eq event 'FOCUS_GAINED))
+   ((eq event 'FOCUS_LOST))
+   ((eq event 'FORM_ACTIVE))
+   ((eq event 'ROOT_ACTIVE))
+   ((eq event 'FILE_INCLUDED))
+   ((eq event 'PLUG_CREATED))
+   ((eq event 'BUILTINS))
+   )
   )
 
 (ezbl-init-commands)
