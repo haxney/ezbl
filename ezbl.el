@@ -892,7 +892,7 @@ Starts a process and stores it in `ezbl-cookie-process' if it is
 nil. If `ezbl-cookie-process' is non-nil, then don't create a
 process unless FORCE is non-nil, in which case kill the existing
 process and start a new one."
-  (when ezbl-cookie-process
+  (when (processp ezbl-cookie-process)
     (unless force
       (error "A cookie process already exists")))
 
@@ -902,12 +902,13 @@ process and start a new one."
           (delete-file sock-path)
         (error (format "Cannot listen on `%s', file exists" sock-path))))
 
-    (make-network-process :name "ezbl-cookie"
-                          :type 'seqpacket
-                          :server t
-                          :service sock-path
-                          :family 'local
-                          :filter 'ezbl-cookie-listener)))
+    (setq ezbl-cookie-process
+          (make-network-process :name "ezbl-cookie"
+                                :type 'seqpacket
+                                :server t
+                                :service sock-path
+                                :family 'local
+                                :filter 'ezbl-cookie-listener))))
 
 (defun ezbl-cookie-set-handler (&optional inst path)
   "Set Ezbl instance INST's cookie_handler to
