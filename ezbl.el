@@ -572,6 +572,10 @@ each one. Also, run through `ezbl-instance-spec' and call
 
 For now, only the cookie handler is started."
   (unless ezbl-initialized
+    (when (or (not (boundp 'server-name)) (null server-name))
+      (error "Emacs server is required for Ezbl, but `server-name' is nil."))
+    (when (null server-process)
+      (error "Emacs server is required for Ezbl, but the server is not started."))
     (unless (featurep 'xwidget)
       (error "This version of Emacs does not support embedding windows. Please get a patched version from http://github.com/jave/emacs"))
     (unless (featurep 'make-network-process '(:type seqpacket))
@@ -862,13 +866,8 @@ HEIGHT - The height of the widget"
 (defun ezbl-open (uri)
   "Create a new instance in its own buffer and browse to URI."
   (interactive "sUri: ")
-  (when (or (not (boundp 'server-name)) (null server-name))
-    (error "Emacs server is required for Ezbl, but `server-name' is nil."))
-  (when (null server-process)
-    (error "Emacs server is required for Ezbl, but the server is not started."))
 
-  (unless ezbl-initialized
-    (ezbl-init))
+  (ezbl-init)
 
   (switch-to-buffer (generate-new-buffer uri))
 
