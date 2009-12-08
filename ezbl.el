@@ -76,6 +76,24 @@ should be set by `ezbl-init'.")
   output-buffer
   display-buffer)
 
+(defconst ezbl-get-inst-first
+  '(ezbl-get-inst-first
+    nil ;; protected
+    t   ;; enabled
+    (advice . (lambda ()
+                (let ((inst (ad-get-arg 0)))
+                  (ad-set-arg 0 (ezbl-get-inst inst))))))
+  "Computed advice to apply to each of the `ezbl-inst' slot
+accessors.")
+
+(defconst ezbl-inst-slots
+  '(args
+    process
+    pid
+    output-buffer
+    display-buffer)
+  "A list of the slot names in the `ezbl-inst' structure.")
+
 (defconst ezbl-output-buffer-format " *ezbl-output-%s*"
   "The format used for transforming ezbl instance names into
 buffer names.")
@@ -534,12 +552,11 @@ each one."
   (append (mapcar 'ezbl-make-command-func ezbl-commands)))
 
 (defun ezbl-init ()
-  "Starts up the services needed for Ezbl to run.
-
-For now, only the cookie handler is started."
+  "Starts up the services needed for Ezbl to run."
   (unless ezbl-initialized
     (unless (featurep 'xwidget)
       (error "This version of Emacs does not support embedding windows. Please get a patched version from http://github.com/jave/emacs"))
+    (ezbl-inst-define-advice)
     (ezbl-listen-cookie-socket nil t)
     (setq ezbl-initialized t)))
 
@@ -692,6 +709,19 @@ Returns an ezbl-inst."
       (if strict
           (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))
         nil))))
+
+(defun ezbl-inst-define-advice ()
+  "Define and activate the advice for each slot in `ezbl-inst'.
+
+Makes the accessors call `ezbl-get-inst' before operating, so
+that the accessors work on things which are resolvable to an
+`ezbl-inst', rather than only allowing the insts themselves."
+  (mapc '(lambda (item)
+           (let ((func (intern (concat "ezbl-inst-" (symbol-name item)))))
+             (ad-add-advice func
+                            ezbl-get-inst-first 'before 'first)
+             (ad-activate func)))
+        ezbl-inst-slots))
 
 (defun ezbl-exec-command (inst command)
   "Sends the string COMMAND to the Uzbl instance INST.
