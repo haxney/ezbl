@@ -1090,19 +1090,19 @@ entire window."
 
 INST should be the `ezbl-inst' of the associated Uzbl process
 and ANSWER is the string returned by the process."
-  (with-current-buffer (ezbl-inst-output-buffer inst)
-    (insert answer))
+
   (let ((answers (split-string answer "\n" t)))
     (dolist (ans answers)
       (if (string-match "^EVENT \\[\\([0-9]+\\)\\] \\([A-Z_]+\\) ?\\(.*\\)$" ans)
-          (let ((app-id (match-string-no-properties 1 ans))
+          (let ((app-name (match-string-no-properties 1 ans))
                 (event (intern (match-string-no-properties 2 ans)))
                 (detail (match-string-no-properties 3 ans)))
-            (ezbl-event-handler inst event detail))
-;        (message "not-matched: `%s'" ans)
+            (ezbl-event-handler inst event detail app-name))
+
+        (ezbl-process-append inst answer)
         ))))
 
-(defun ezbl-event-handler (inst event detail)
+(defun ezbl-event-handler (inst event detail &optional app-name)
   "Respond to a Uzbl-generated event.
 
 EVENT is the interned symbol of the event Uzbl returned, while
@@ -1120,37 +1120,53 @@ INST is resolvable to an ezbl instance."
               (value (match-string-no-properties 3 detail)))
           (puthash var-name value (ezbl-inst-vars inst)))
       (error "VARIABLE_SET event had invalid details: `%s'" detail)))
-   ((eq event 'COMMAND_EXECUTED))
-   ((eq event 'COMMAND_ERROR))
-   ((eq event 'GEOMETRY_CHANGED))
-   ((eq event 'FIFO_SET))
-   ((eq event 'SOCKET_SET))
+   ;; ((eq event 'COMMAND_EXECUTED))
+   ;; ((eq event 'COMMAND_ERROR))
+   ;; ((eq event 'GEOMETRY_CHANGED))
+   ;; ((eq event 'FIFO_SET))
+   ;; ((eq event 'SOCKET_SET))
    ((eq event 'LOAD_COMMIT)
     (puthash 'uri detail (ezbl-inst-vars inst)))
-   ((eq event 'LOAD_START))
-   ((eq event 'LOAD_FINISHED))
-   ((eq event 'LOAD_ERROR))
-   ((eq event 'LOAD_PROGRESS))
+   ((eq event 'LOAD_START)) ;; Nothing for now.
+   ((eq event 'LOAD_FINISHED)) ;; Nothing for now.
+   ;; ((eq event 'LOAD_ERROR))
+   ;; ((eq event 'LOAD_PROGRESS))
    ((eq event 'TITLE_CHANGED)
     (puthash 'title detail (ezbl-inst-vars inst)))
-   ((eq event 'DOWNLOAD_REQUEST))
-   ((eq event 'LINK_HOVER))
-   ((eq event 'LINK_UNHOVER))
-   ((eq event 'KEY_PRESS))
-   ((eq event 'KEY_RELEASE))
-   ((eq event 'SELECTION_CHANGED))
-   ((eq event 'NEW_WINDOW))
-   ((eq event 'WEBINSPECTOR))
-   ((eq event 'WEBINSPECTOR))
-   ((eq event 'FOCUS_GAINED))
-   ((eq event 'FOCUS_LOST))
-   ((eq event 'FORM_ACTIVE))
-   ((eq event 'ROOT_ACTIVE))
-   ((eq event 'FILE_INCLUDED))
+   ;; ((eq event 'DOWNLOAD_REQUEST))
+   ;; ((eq event 'LINK_HOVER))
+   ;; ((eq event 'LINK_UNHOVER))
+   ;; ((eq event 'KEY_PRESS))
+   ;; ((eq event 'KEY_RELEASE))
+   ;; ((eq event 'SELECTION_CHANGED))
+   ;; ((eq event 'NEW_WINDOW))
+   ;; ((eq event 'WEBINSPECTOR))
+   ;; ((eq event 'WEBINSPECTOR))
+   ;; ((eq event 'FOCUS_GAINED))
+   ;; ((eq event 'FOCUS_LOST))
+   ;; ((eq event 'FORM_ACTIVE))
+   ;; ((eq event 'ROOT_ACTIVE))
+   ;; ((eq event 'FILE_INCLUDED))
    ((eq event 'PLUG_CREATED))
-   ((eq event 'BUILTINS))
-   )
-  )
+   ;; ((eq event 'BUILTINS))
+   (t
+    (ezbl-process-append inst (format "EVENT [%s] %s %s\n" app-name event detail)))
+  ))
+
+(defun ezbl-process-append (inst string)
+  "Insert STRING at the end of the process buffer of INST.
+
+Takes into account the current position of process-mark for the
+process owning buffer."
+  (with-current-buffer (ezbl-inst-output-buffer inst)
+    (let* ((proc (ezbl-inst-process inst))
+           (moving (= (point) (process-mark proc))))
+      (save-excursion
+        ;; Insert the text, advancing the process marker.
+        (goto-char (process-mark proc))
+        (insert string)
+        (set-marker (process-mark proc) (point)))
+      (if moving (goto-char (process-mark proc))))))
 
 (ezbl-init-commands)
 
