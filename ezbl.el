@@ -660,6 +660,7 @@ Returns an `ezbl-inst' struct."
       ;; Make `ezbl-inst' survive `kill-all-local-variables'
       (put 'ezbl-inst 'permanent-local t)
 
+      (add-to-list 'ezbl-inst-list (cons pid inst))
       (ezbl-mode)
       inst)))
 
