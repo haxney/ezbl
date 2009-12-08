@@ -834,26 +834,25 @@ HEIGHT - The height of the widget"
   (interactive "sUri: ")
 
   (ezbl-init)
-
   (switch-to-buffer (generate-new-buffer uri))
-
   ;; Currently has problems embedding into an empty buffer, so insert a space.
   (insert " ")
   (backward-char)
-
   (ezbl-embed)
 
   (add-hook 'ezbl-xembed-ready-hook
-            `(lambda ()
-               (ezbl-command-uri ezbl-inst ,uri))
-            nil
-            t)
+            `(lambda () (ezbl-command-uri ezbl-inst ,uri))
+            nil t)
   (put 'ezbl-xembed-ready-hook 'permanent-local t)
-
   (current-buffer))
 
 (defun ezbl-cookie-listener (proc answer)
-  "Handle a cookie request over a socket."
+  "Handle a cookie request over a socket.
+
+This function is intended to be set as the filter of the
+server-process listening on the cookie socket. It receives the
+process PROC with which it is communicating and ANSWER, the text
+sent by Uzbl."
   (let* ((args (split-string answer "\0"))
          (result (apply 'ezbl-cookie-handler args)))
     (when (and result
@@ -862,6 +861,18 @@ HEIGHT - The height of the widget"
     (process-send-eof proc)))
 
 (defun ezbl-cookie-handler (op scheme host path &optional data &rest ignored)
+  "Process a single cookie.
+
+OP - either \"PUT\" or \"GET\", indicating whether a cookie
+     should be stored or retrieved, respectively.
+
+SCHEME - The URL scheme of the request, usually \"http\".
+
+HOST - The host requesting the cookie.
+
+PATH - The path of the cookie.
+
+DATA - In a \"PUT\" request, this is the data to store."
   (let ((secure (if (equal scheme "https")
                     t
                   nil))
