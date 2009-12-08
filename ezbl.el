@@ -829,7 +829,7 @@ HEIGHT - The height of the widget"
 
 (defun ezbl-xwidget-next-id ()
   "Returns the next xwidget id based on the value of `ezbl-xwidget-id-counter'."
-  (setq ezbl-xwidget-id-counter (1+ ezbl-xwidget-id-counter)))
+  (incf ezbl-xwidget-id-counter))
 
 (defun ezbl-xwidget-handler ()
   "Handle an xwidget event (such as when it is initialized."
