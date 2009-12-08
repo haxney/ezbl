@@ -504,7 +504,7 @@ Would return (amount)."
 
 The function created takes a number of arguments specified by the
 `format' attribute of SPEC and returns a string suitable for
-`ezbl-exec-command'.
+`ezbl-command-exec'.
 
 Sets the `interactive' declaration to the `interactive' attribute
 of SPEC.
@@ -528,7 +528,7 @@ See `ezbl-commands' for a description of the format of SPEC."
           `(lambda (inst ,@args)
              ,doc
              ,(when interactive-spec `(interactive ,interactive-spec))
-             (ezbl-exec-command inst (format ,output-format ,@args))))))
+             (ezbl-command-exec inst (format ,output-format ,@args))))))
 
 (defun ezbl-command-init ()
   "Create Emacs functions from `ezbl-commands' and `ezbl-instance-spec'.
@@ -719,13 +719,11 @@ that the accessors work on things which are resolvable to an
              (ad-activate func)))
         ezbl-inst-slots))
 
-(defun ezbl-exec-command (inst command)
+(defun ezbl-command-exec (inst command)
   "Sends the string COMMAND to the Uzbl instance INST.
 
-If INST is a buffer, use the value of
-`ezbl-inst' in that buffer. If
-
-COMMAND is a Uzbl command as described by the Uzbl
+If INST is a buffer, use the value of `ezbl-inst' in that
+buffer. If COMMAND is a Uzbl command as described by the Uzbl
 Readme (http://www.uzbl.org/readme.php).
 
 See `ezbl-inst-start' for a description of the format of INST."
