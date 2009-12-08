@@ -676,7 +676,7 @@ is returned.
 If STRICT is non-nil, raise an error if INST is not resolvable to
 an instance.
 
-Returns an ezbl-inst."
+Returns an `ezbl-inst'."
   (when (null inst)
     (set 'inst ezbl-inst))
 
