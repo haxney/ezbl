@@ -42,7 +42,7 @@
   :group 'ezbl
   :type 'file)
 
-(defvar ezbl-instances nil
+(defvar ezbl-inst-list nil
   "A list of Uzbl instances.
 
 Has the format:
@@ -50,13 +50,13 @@ Has the format:
   ((pid  . instance)
    (pid2 . instance2))
 
-See `ezbl-instance-start' for a description of the format of the instance
+See `ezbl-inst-start' for a description of the format of the instance
 variable.")
 
-(defvar ezbl-instance nil
+(defvar ezbl-inst nil
   "A buffer-local variable storing the current Ezbl instance.
 
-See `ezbl-instance-start' for a description of the format of this
+See `ezbl-inst-start' for a description of the format of this
 variable.")
 
 (defvar ezbl-cookie-process nil
@@ -67,13 +67,33 @@ processes.")
   "Keeps track of whether or not Ezbl has been initialized. This
 should be set by `ezbl-init'.")
 
-(defvar ezbl-instance-spec
-  '((arguments . cons)
-    (process . process)
-    (pid . integer)
-    (output-buffer . buffer)
-    (display-buffer . buffer))
-  "An alist of required keys and their types in an `ezbl-instance'.")
+
+(defstruct ezbl-inst
+  "A structure containing the properties of an Ezbl instance."
+  args
+  process
+  pid
+  output-buffer
+  display-buffer
+  vars)
+
+(defconst ezbl-inst-slots
+  '(args
+    process
+    pid
+    output-buffer
+    display-buffer
+    vars)
+  "A list of the slot names in the `ezbl-inst' structure.")
+
+(defconst ezbl-inst-get-first
+  '(ezbl-inst-get-first
+    nil ;; protected
+    t   ;; enabled
+    (advice . (lambda ()
+                (ad-set-arg 0 (ezbl-inst-get (ad-get-arg 0))))))
+  "Computed advice to apply to each of the `ezbl-inst' slot
+accessors.")
 
 (defconst ezbl-output-buffer-format " *ezbl-output-%s*"
   "The format used for transforming ezbl instance names into
@@ -524,39 +544,6 @@ See `ezbl-commands' for a description of the format of SPEC."
              ,(when interactive-spec `(interactive ,interactive-spec))
              (ezbl-exec-command inst (format ,output-format ,@args))))))
 
-(defun ezbl-make-instance-accessor-func (spec)
-  "Creates an accessor function for the given symbol.
-
-If SPEC is a list, the car is used for the key name.
-
-The function will be called `ezbl-instance-<name>', and will take
-the following (optional) arguments:
-
-INST - An object which is resolvable (through
-       `ezbl-instance-get') to an instance.
-
-VALUE - If given and non-nil, sets the value of NAME to NEW-VALUE."
-  (let* ((name (if (listp spec)
-                   (car spec)
-                 spec))
-         (doc (format "Get (or set) the value of %s from INST.
-
-If INST is nil, the value of `ezbl-instance' in the current
-buffer is used. If NEW-VALUE is non-nil, then the value of %s in INST
-is set to NEW-VALUE.
-
-Returns the value of %s in INST, or the new value, if it has been
-set." name name name))
-         (command-name (intern (format "ezbl-instance-%s" name))))
-    (fset command-name
-          `(lambda (&optional inst new-value)
-             ,doc
-             (let* ((instance (ezbl-instance-get inst t))
-                    (elt (assq (quote ,name) instance)))
-               (if new-value
-                   (setcdr elt new-value)
-                 (cdr elt)))))))
-
 (defun ezbl-command-init ()
   "Create Emacs functions from `ezbl-commands' and `ezbl-instance-spec'.
 
@@ -564,13 +551,10 @@ Read through `ezbl-commands' and call `ezbl-command-make-func' on
 each one. Also, run through `ezbl-instance-spec' and call
 `ezbl-make-instance-accessor-func' on each one."
   (interactive)
-  (append (mapcar 'ezbl-command-make-func ezbl-commands)
-          (mapcar 'ezbl-make-instance-accessor-func ezbl-instance-spec)))
+  (append (mapcar 'ezbl-command-make-func ezbl-commands)))
 
 (defun ezbl-init ()
-  "Starts up the services needed for Ezbl to run.
-
-For now, only the cookie handler is started."
+  "Starts up the services needed for Ezbl to run."
   (unless ezbl-initialized
     (when (or (not (boundp 'server-name)) (null server-name))
       (error "Emacs server is required for Ezbl, but `server-name' is nil."))
@@ -581,9 +565,10 @@ For now, only the cookie handler is started."
     (unless (featurep 'make-network-process '(:type seqpacket))
       (error "This version of Emacs does not support SEQPACKET sockets"))
     (ezbl-cookie-socket-listen nil t)
+    (ezbl-inst-define-advice)
     (setq ezbl-initialized t)))
 
-(defun ezbl-instance-start (&rest args)
+(defun ezbl-inst-start (&rest args)
   "Start an instance of Uzbl. ARGS is a keyword list of
 options and values to pass to the Uzbl instance.
 
@@ -616,17 +601,8 @@ The following keywords are used:
 :display DISPLAY
         X display to use
 
-Returns an ezbl instance alist of the form:
-
-  ((arguments . (\"--option1\" \"value\" \"--switch\"))
-   (process . #<process ezbl-process>)
-   (pid . 16555)
-   (output-buffer . #<buffer  *ezbl-output-16555*>)
-   (display-buffer . #<buffer *ezbl-display-16555*>))
-
-This 'ezbl instance' is used in various other functions."
-  (let ((program-args nil)
-        (instance `((display-buffer . ,(current-buffer)))))
+Returns an `ezbl-inst' struct."
+  (let (program-args)
     ;; Process keywords
     (while args
       (let ((arg (car args)))
@@ -666,7 +642,8 @@ This 'ezbl instance' is used in various other functions."
             (setq program-args (append program-args (list "--display") (list value))))))))
 
     ;; Start process
-    (let* ((proc-name "ezbl-process")
+    (let* (inst
+           (proc-name "ezbl-process")
            (output-buffer (generate-new-buffer "*ezbl-output*"))
            (proc (apply 'start-process
                         (append (list proc-name
@@ -675,103 +652,106 @@ This 'ezbl instance' is used in various other functions."
                                 program-args)))
            (pid (process-id proc)))
 
-      (setq instance (append `((arguments . ,program-args)
-                               (process . ,proc)
-                               (pid . ,pid)
-                               (output-buffer . ,output-buffer))
-                             instance))
+      (setq inst (make-ezbl-inst
+                  :args program-args
+                  :process proc
+                  :pid pid
+                  :output-buffer output-buffer
+                  :display-buffer (current-buffer)
+                  :vars (make-hash-table)))
+      (set-process-filter proc 'ezbl-event-listener)
 
       (with-current-buffer output-buffer
         (rename-buffer (format ezbl-output-buffer-format (int-to-string pid)))
-        (set (make-local-variable 'ezbl-instance) instance))
+        (set (make-local-variable 'ezbl-inst) inst))
       (rename-buffer (format ezbl-display-buffer-format pid))
-      (set (make-local-variable 'ezbl-instance) instance)
+      (set (make-local-variable 'ezbl-inst) inst)
 
-      ;; Make `ezbl-instance' survive `kill-all-local-variables'
-      (put 'ezbl-instance 'permanent-local t)
+      ;; Make `ezbl-inst' survive `kill-all-local-variables'
+      (put 'ezbl-inst 'permanent-local t)
 
-      (add-to-list 'ezbl-instances `(,pid . ,instance))
+      (add-to-list 'ezbl-inst-list (cons pid inst))
       (ezbl-mode)
-      instance)))
+      inst)))
 
-(defun ezbl-instance-p (inst)
-  "Return t if INST is an ezbl-instance."
-  (and
-   (consp inst)
-   (consp (car inst))
-   ;; Check that each element of `ezbl-instance-spec' matches the key and type
-   ;; of an association in INST.
-   (block spec-check
-     (mapc '(lambda (spec)
-              (let* ((key-name (car spec))
-                     (expected-type (cdr spec))
-                     (elt (assq key-name inst)))
-                (when (null elt)
-                  (return-from spec-check))
-                (when (not (eq expected-type (type-of (cdr elt))))
-                  (return-from spec-check))))
-           ezbl-instance-spec)
-     ;; Return INST if the block exited normally (not using `return-from').
-     inst)))
-
-(defun ezbl-instance-get (&optional inst strict)
+(defun ezbl-inst-get (&optional inst strict)
   "Returns the ezbl instance from INST.
 
 If INST is an ezbl instance, then it is returned unchanged. If it
-is a buffer, then the local variable of `ezbl-instance' is
-returned. If it is an integer, then `ezbl-instances' is searched
+is a buffer, then the local variable of `ezbl-inst' is
+returned. If it is an integer, then `ezbl-inst-list' is searched
 for an instance with a matching pid. If it is nil or not
-supplied, then the value of `ezbl-instance' in the current buffer
+supplied, then the value of `ezbl-inst' in the current buffer
 is returned.
 
 If STRICT is non-nil, raise an error if INST is not resolvable to
 an instance.
 
-Returns an ezbl-instance."
+Returns an `ezbl-inst'."
   (when (null inst)
-    (set 'inst ezbl-instance))
+    (set 'inst ezbl-inst))
 
   (let ((instance
          (cond
           ;; Is an instance.
-          ((ezbl-instance-p inst))
+          ((ezbl-inst-p inst)
+           inst)
           ;; Is a buffer.
           ((bufferp inst)
            (with-current-buffer inst
-             ezbl-instance))
+             ezbl-inst))
           ;; Is a pid.
           ((integerp inst)
-           (cdr (assq inst
-                      ezbl-instances)))
+           (cdr-safe (assq inst
+                      ezbl-inst-list)))
+          ((processp inst)
+           (cdr-safe (assq (process-id inst)
+                           ezbl-inst-list)))
           ;; Is the name of a buffer.
           ((stringp inst)
            (if (and (bufferp (get-buffer inst))
                     (not (null (with-current-buffer inst
-                                 ezbl-instance))))
+                                 ezbl-inst))))
                (with-current-buffer inst
-                 ezbl-instance)
-             ;; Is the name of an instance, so open the output buffer named "*ezbl-name*"
-             (with-current-buffer (format ezbl-output-buffer-format inst)
-               ezbl-instance))))))
-    (when (and strict
-               (not (ezbl-instance-p instance)))
-      (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance." inst)))
-    (ezbl-instance-p instance)))
+                 ezbl-inst)
+             ;; Is the name of an instance, so open the output buffer which
+             ;; corresponds to this name.
+             (when (get-buffer (format ezbl-output-buffer-format inst))
+               (with-current-buffer (format ezbl-output-buffer-format inst)
+                 ezbl-inst)))))))
+    (if (ezbl-inst-p instance)
+        instance
+      (if strict
+          (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))
+        nil))))
+
+(defun ezbl-inst-define-advice ()
+  "Define and activate the advice for each slot in `ezbl-inst'.
+
+Makes the accessors call `ezbl-inst-get' before operating, so
+that the accessors work on things which are resolvable to an
+`ezbl-inst', rather than only allowing the insts themselves."
+  (mapc '(lambda (item)
+           (let ((func (intern (concat "ezbl-inst-" (symbol-name item)))))
+             (ad-add-advice func
+                            ezbl-inst-get-first 'before 'first)
+             (ad-activate func)))
+        ezbl-inst-slots))
 
 (defun ezbl-exec-command (inst command)
   "Sends the string COMMAND to the Uzbl instance INST.
 
 If INST is a buffer, use the value of
-`ezbl-instance' in that buffer. If
+`ezbl-inst' in that buffer. If
 
 COMMAND is a Uzbl command as described by the Uzbl
 readme (http://www.uzbl.org/readme.php).
 
-See `ezbl-instance-start' for a description of the format of INSTANCE."
+See `ezbl-inst-start' for a description of the format of INST."
   ;; Append a newline (\n) to the end of COMMAND if one is not already there.
   (when (not (string= "\n" (substring command -1)))
     (setq command (concat command "\n")))
-  (process-send-string (ezbl-instance-process inst) command))
+  (process-send-string (ezbl-inst-process inst) command))
 
 (defun ezbl-sync-request (inst req)
   "Request Uzl to evaluate a request string REQ and wait for the result.
@@ -796,7 +776,7 @@ for more info):
 
   @[xml]@: Escapes any XML in the brackets."
   (let ((tag (sha1 (int-to-string (random)))))
-    (with-current-buffer (ezbl-instance-output-buffer inst)
+    (with-current-buffer (ezbl-inst-output-buffer inst)
       (ezbl-command-print inst
                           (format "%s{%s}%s" tag req tag))
       (goto-char (point-max))
@@ -810,7 +790,7 @@ for more info):
 
 (defun ezbl-variable-get (inst var)
   "Return the value of VAR from the ezbl instance INST."
-  (ezbl-sync-request inst (concat "@" var)))
+  (gethash (intern-soft var) (ezbl-inst-vars inst)))
 
 (defun ezbl-run-js (inst js)
   "Execute the Javascript in JS on the Uzbl instance INST and
@@ -859,7 +839,7 @@ HEIGHT - The height of the widget"
     (cond
      ((eq xwidget-event-type 'xembed-ready)
       (let* ((xembed-id (nth 3 last-input-event)))
-        (ezbl-instance-start :socket (number-to-string xembed-id)
+        (ezbl-inst-start :socket (number-to-string xembed-id)
                     :config "-") ;; Use stdin for config
         (run-hooks 'ezbl-xembed-ready-hook))))))
 
@@ -879,7 +859,7 @@ HEIGHT - The height of the widget"
 
   (add-hook 'ezbl-xembed-ready-hook
             `(lambda ()
-               (ezbl-command-uri ezbl-instance ,uri))
+               (ezbl-command-uri ezbl-inst ,uri))
             nil
             t)
   (put 'ezbl-xembed-ready-hook 'permanent-local t)
@@ -935,7 +915,7 @@ The script specific arguments are this:
          (socket-filename (nth 4 args))
          (current-url (nth 5 args))
          (current-title (nth 6 args))
-         (buffer (ezbl-instance-display-buffer pid)))
+         (buffer (ezbl-inst-display-buffer pid)))
     (with-current-buffer buffer
       (cond
        ((equal type "load_finish_handler"))
@@ -1008,7 +988,7 @@ process and start a new one."
 (defun ezbl-init-handlers (&optional inst)
   "Initialize the Uzbl external script handlers.
 
-INST is a valid input to `ezbl-instance-get'.
+INST is a valid input to `ezbl-inst-get'.
 
 Sets the server-name parameter to the current value of `server-name'."
   (when (null ezbl-handler-path)
@@ -1022,9 +1002,9 @@ Sets the server-name parameter to the current value of `server-name'."
   "Updates the mode-line format in each ezbl display-window
   according to `ezbl-mode-line-format'."
   (mapc '(lambda (inst)
-           (with-current-buffer (ezbl-instance-display-buffer (car inst))
+           (with-current-buffer (ezbl-inst-display-buffer (car inst))
              (setq mode-line-format ezbl-mode-line-format)))
-        ezbl-instances))
+        ezbl-inst-list))
 
 (defun ezbl-set-mode-line-format (symbol value)
   "Used for setting `ezbl-mode-line-format'; sets SYMBOL's value
@@ -1037,10 +1017,10 @@ Sets the server-name parameter to the current value of `server-name'."
     mode-line-mule-info
     mode-line-modified
     mode-line-frame-identification
-    (:propertize (:eval (ezbl-run-js ezbl-instance "document.title"))
+    (:propertize (:eval (ezbl-variable-get ezbl-inst 'title))
                  face bold)
     " -- "
-    (:eval (ezbl-variable-get ezbl-instance "uri"))
+    (:eval (ezbl-variable-get ezbl-inst 'uri))
     "   "
     mode-line-modes
     (which-func-mode ("" which-func-format "--"))
@@ -1090,7 +1070,7 @@ property/xwidget id impedance mismatch.
 (defun ezbl-fill-window (&optional inst)
   "Re-sizes the xwidget in the display-buffer of INST to fill its
 entire window."
-  (let ((buffer (ezbl-instance-display-buffer inst)))
+  (let ((buffer (ezbl-inst-display-buffer inst)))
     (with-current-buffer buffer
       (let* ((edges-list (window-inside-pixel-edges (get-buffer-window buffer)))
              (left (nth 0 edges-list))
@@ -1103,6 +1083,89 @@ entire window."
         (ezbl-xwidget-resize-at 1 width height)
         (toggle-read-only t)
         (set-buffer-modified-p nil)))))
+
+(defun ezbl-event-listener (inst answer)
+  "Filter for ezbl processes.
+
+INST should be the `ezbl-inst' of the associated Uzbl process
+and ANSWER is the string returned by the process."
+
+  (let ((answers (split-string answer "\n" t)))
+    (dolist (ans answers)
+      (if (string-match "^EVENT \\[\\([0-9]+\\)\\] \\([A-Z_]+\\) ?\\(.*\\)$" ans)
+          (let ((app-name (match-string-no-properties 1 ans))
+                (event (intern (match-string-no-properties 2 ans)))
+                (detail (match-string-no-properties 3 ans)))
+            (ezbl-event-handler inst event detail app-name))
+
+        (ezbl-process-append inst answer)
+        ))))
+
+(defun ezbl-event-handler (inst event detail &optional app-name)
+  "Respond to a Uzbl-generated event.
+
+EVENT is the interned symbol of the event Uzbl returned, while
+DETAIL is a (possibly-empty) string containing any additional
+information included with the event.
+
+INST is resolvable to an ezbl instance."
+  (cond
+   ((eq event 'INSTANCE_START)) ; Ignored
+   ((eq event 'INSTANCE_EXIT)) ; Close process and stuff
+   ((eq event 'VARIABLE_SET)
+    (if (string-match "\\([a-z0-9_]+\\) \\(str\\|int\\|float\\) \\(.*\\)" detail)
+        (let ((var-name (intern (match-string-no-properties 1 detail)))
+              (type (match-string-no-properties 2 detail))
+              (value (match-string-no-properties 3 detail)))
+          (puthash var-name value (ezbl-inst-vars inst)))
+      (error "VARIABLE_SET event had invalid details: `%s'" detail)))
+   ;; ((eq event 'COMMAND_EXECUTED))
+   ;; ((eq event 'COMMAND_ERROR))
+   ;; ((eq event 'GEOMETRY_CHANGED))
+   ;; ((eq event 'FIFO_SET))
+   ;; ((eq event 'SOCKET_SET))
+   ((eq event 'LOAD_COMMIT)
+    (puthash 'uri detail (ezbl-inst-vars inst)))
+   ((eq event 'LOAD_START)) ;; Nothing for now.
+   ((eq event 'LOAD_FINISHED)) ;; Nothing for now.
+   ;; ((eq event 'LOAD_ERROR))
+   ;; ((eq event 'LOAD_PROGRESS))
+   ((eq event 'TITLE_CHANGED)
+    (puthash 'title detail (ezbl-inst-vars inst)))
+   ;; ((eq event 'DOWNLOAD_REQUEST))
+   ;; ((eq event 'LINK_HOVER))
+   ;; ((eq event 'LINK_UNHOVER))
+   ;; ((eq event 'KEY_PRESS))
+   ;; ((eq event 'KEY_RELEASE))
+   ;; ((eq event 'SELECTION_CHANGED))
+   ;; ((eq event 'NEW_WINDOW))
+   ;; ((eq event 'WEBINSPECTOR))
+   ;; ((eq event 'WEBINSPECTOR))
+   ;; ((eq event 'FOCUS_GAINED))
+   ;; ((eq event 'FOCUS_LOST))
+   ;; ((eq event 'FORM_ACTIVE))
+   ;; ((eq event 'ROOT_ACTIVE))
+   ;; ((eq event 'FILE_INCLUDED))
+   ((eq event 'PLUG_CREATED))
+   ((eq event 'BUILTINS))
+   (t
+    (ezbl-process-append inst (format "EVENT [%s] %s %s\n" app-name event detail)))
+  ))
+
+(defun ezbl-process-append (inst string)
+  "Insert STRING at the end of the process buffer of INST.
+
+Takes into account the current position of process-mark for the
+process owning buffer."
+  (with-current-buffer (ezbl-inst-output-buffer inst)
+    (let* ((proc (ezbl-inst-process inst))
+           (moving (= (point) (process-mark proc))))
+      (save-excursion
+        ;; Insert the text, advancing the process marker.
+        (goto-char (process-mark proc))
+        (insert string)
+        (set-marker (process-mark proc) (point)))
+      (if moving (goto-char (process-mark proc))))))
 
 (ezbl-command-init)
 
