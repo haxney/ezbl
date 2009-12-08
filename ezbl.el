@@ -696,6 +696,9 @@ Returns an `ezbl-inst'."
           ((integerp inst)
            (cdr-safe (assq inst
                       ezbl-inst-list)))
+          ((processp inst)
+           (cdr-safe (assq (process-id inst)
+                           ezbl-inst-list)))
           ;; Is the name of a buffer.
           ((stringp inst)
            (if (and (bufferp (get-buffer inst))
