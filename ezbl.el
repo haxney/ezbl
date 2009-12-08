@@ -1093,9 +1093,7 @@ and ANSWER is the string returned by the process."
                 (event (intern (match-string-no-properties 2 ans)))
                 (detail (match-string-no-properties 3 ans)))
             (ezbl-event-handler inst event detail app-name))
-
-        (ezbl-process-append inst answer)
-        ))))
+        (ezbl-process-append inst (concat ans "\n"))))))
 
 (defun ezbl-event-handler (inst event detail &optional app-name)
   "Respond to a Uzbl-generated event.
