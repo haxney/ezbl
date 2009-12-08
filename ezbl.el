@@ -474,20 +474,6 @@ All variables must be enclosed in angle brackets.")
     (caret_browsing . ""))
   "The variables available from Uzbl.")
 
-(defconst ezbl-handlers '("load_finish_handler"
-                          "load_start_handler"
-                          "load_commit_handler"
-                          "history_handler"
-                          "download_handler"
-                          "cookie_handler"
-                          "new_window")
-  "A list of the Uzbl handler variables.")
-
-(defvar ezbl-handler-path (if (null load-file-name)
-                              (locate-library "handler.py" t)
-                            (concat (file-name-directory load-file-name) "handler.py"))
-  "The path of the Uzbl callback handler.")
-
 (defvar ezbl-xwidget-id-counter 0
   "Counter for xwidget IDs. IDs must be unique, or Emacs will crash.")
 
@@ -866,70 +852,6 @@ HEIGHT - The height of the widget"
 
   (current-buffer))
 
-(defun ezbl-callback (type &rest args)
-  "The handler for all Uzbl handler functions.
-
-TYPE must be one of:
-  - \"load_finish_handler\"
-  - \"load_start_handler\"
-  - \"load_commit_handler\"
-  - \"history_handler\"
-  - \"download_handler\"
-  - \"cookie_handler\"
-  - \"new_window\"
-
-The remaining arguments ARGS are specified by the \"EXTERNAL
-SCRIPTS\" section of the Uzbl readme, and are as follows:
-
-Handler scripts that are called by uzbl are passed the following
-arguments:
-
-$1 uzbl-config-file
-$2 uzbl-pid
-$3 uzbl-x-window-id
-$4 uzbl-fifo-filename
-$5 uzbl-socket-filename
-$6 current page url
-$7 current page title
-.. [ script specific ] (optional)
-
-The script specific arguments are this:
-
-  - history:
-      $8 date of visit (Y-m-d H:i:s localtime)
-  - add bookmark:
-      none
-  - download:
-      $8 url of item to download
-  - cookie handler
-      $8 GET/PUT
-      $9 request address scheme (e.g. http or https)
-      $10 request address host (if current page url is
-          www.foo.com/somepage, this could be something else than
-          foo, eg advertising from another host)
-      $11 request address path $12 cookie (only with PUT requests)"
-  (let* ((config-file (nth 0 args))
-         (pid (string-to-int (nth 1 args)))
-         (window-id (nth 2 args))
-         (fifo-filename (nth 3 args))
-         (socket-filename (nth 4 args))
-         (current-url (nth 5 args))
-         (current-title (nth 6 args))
-         (buffer (ezbl-inst-display-buffer pid)))
-    (with-current-buffer buffer
-      (cond
-       ((equal type "load_finish_handler"))
-       ((equal type "load_start_handler"))
-       ((equal type "load_commit_handler"))
-       ((equal type "history_handler"))
-       ((equal type "download_handler"))
-       ((equal type "cookie_handler")
-        ;;        (ezbl-cookie-handler args)
-        )
-       ((equal type "new_window"))
-       (t
-        (error (format "Unknown callback type '%s' received." type)))))))
-
 (defun ezbl-cookie-listener (proc answer)
   "Handle a cookie request over a socket."
   (let* ((args (split-string answer "\0"))
@@ -976,23 +898,11 @@ process and start a new one."
                           :family 'local
                           :filter 'ezbl-cookie-listener)))
 
-(defun ezbl-cookie-set-handler (inst &optional path)
+(defun ezbl-cookie-set-handler (&optional inst path)
   "Set Ezbl instance INST's cookie_handler to
   `ezbl-cookie-socket' or PATH, if it's given."
-  (ezbl-command-set inst "cookie_handler" (format "talk_to_socket %s" (or path ezbl-cookie-socket))))
-
-(defun ezbl-init-handlers (&optional inst)
-  "Initialize the Uzbl external script handlers.
-
-INST is a valid input to `ezbl-inst-get'.
-
-Sets the server-name parameter to the current value of `server-name'."
-  (when (null ezbl-handler-path)
-    (error "`ezbl-handler-path' is null, so \"handler.py\" could not be located.."))
-  (mapc '(lambda (type)
-           (ezbl-command-set inst type (format "spawn %s %s %s" ezbl-handler-path type server-name)))
-        ezbl-handlers)
-  (ezbl-cookie-set-handler inst))
+  (ezbl-command-set inst "cookie_handler"
+                    (format "talk_to_socket %s" (or path ezbl-cookie-socket))))
 
 (defun ezbl-update-mode-line-format ()
   "Updates the mode-line format in each ezbl display-window
@@ -1046,7 +956,7 @@ Sets the server-name parameter to the current value of `server-name'."
   (set-buffer-modified-p nil)
   (add-hook 'window-configuration-change-hook 'ezbl-fill-window nil t))
 
-(add-hook 'ezbl-mode-hook 'ezbl-init-handlers)
+(add-hook 'ezbl-mode-hook 'ezbl-cookie-set-handler)
 (add-hook 'ezbl-mode-hook 'ezbl-fill-window)
 (add-hook 'ezbl-mode-hook 'ezbl-update-mode-line-format)
 
