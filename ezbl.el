@@ -81,8 +81,7 @@ should be set by `ezbl-init'.")
     nil ;; protected
     t   ;; enabled
     (advice . (lambda ()
-                (let ((inst (ad-get-arg 0)))
-                  (ad-set-arg 0 (ezbl-get-inst inst))))))
+                (ad-set-arg 0 (ezbl-get-inst (ad-get-arg 0))))))
   "Computed advice to apply to each of the `ezbl-inst' slot
 accessors.")
 
