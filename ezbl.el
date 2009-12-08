@@ -703,7 +703,7 @@ Returns an `ezbl-inst'."
           ;; Is a pid.
           ((integerp inst)
            (cdr-safe (assq inst
-                      ezbl-inst-list)))
+                           ezbl-inst-list)))
           ((processp inst)
            (cdr-safe (assq (process-id inst)
                            ezbl-inst-list)))
@@ -840,7 +840,7 @@ HEIGHT - The height of the widget"
      ((eq xwidget-event-type 'xembed-ready)
       (let* ((xembed-id (nth 3 last-input-event)))
         (ezbl-inst-start :socket (number-to-string xembed-id)
-                    :config "-") ;; Use stdin for config
+                         :config "-") ;; Use stdin for config
         (run-hooks 'ezbl-xembed-ready-hook))))))
 
 (defun ezbl-open (uri)
@@ -924,7 +924,7 @@ The script specific arguments are this:
        ((equal type "history_handler"))
        ((equal type "download_handler"))
        ((equal type "cookie_handler")
-;        (ezbl-cookie-handler args)
+        ;;        (ezbl-cookie-handler args)
         )
        ((equal type "new_window"))
        (t
@@ -941,9 +941,9 @@ The script specific arguments are this:
 
 (defun ezbl-cookie-handler (op scheme host path &optional data &rest ignored)
   (let ((secure (if (equal scheme "https")
-                            t
-                          nil))
-         (url-current-object (url-parse-make-urlobj scheme nil nil host nil path)))
+                    t
+                  nil))
+        (url-current-object (url-parse-make-urlobj scheme nil nil host nil path)))
     (when (equal op "PUT")
       (url-cookie-handle-set-cookie data))
     (when (equal op "GET")
@@ -1026,16 +1026,17 @@ Sets the server-name parameter to the current value of `server-name'."
   :type 'sexp
   :set 'ezbl-set-mode-line-format)
 
-(defvar ezbl-mode-map (let ((map (make-sparse-keymap)))
-                        (mapc '(lambda (item)
-                                 (let* ((binding (cdr (assq 'key-binding item)))
-                                        (name (cdr (assq 'name item)))
-                                        (func (intern (concat "ezbl-command-" name))))
-                                   (when binding
-                                     (define-key map (read-kbd-macro binding) func))))
-                                   ezbl-commands)
-                        map)
-       "Keymap for `ezbl-mode'.")
+(defvar ezbl-mode-map
+  (let ((map (make-sparse-keymap)))
+    (mapc '(lambda (item)
+             (let* ((binding (cdr (assq 'key-binding item)))
+                    (name (cdr (assq 'name item)))
+                    (func (intern (concat "ezbl-command-" name))))
+               (when binding
+                 (define-key map (read-kbd-macro binding) func))))
+          ezbl-commands)
+    map)
+  "Keymap for `ezbl-mode'.")
 
 (define-derived-mode ezbl-mode nil "Ezbl"
   "Mode for interacting with Ezbl processes
