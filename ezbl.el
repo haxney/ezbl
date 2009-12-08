@@ -684,7 +684,8 @@ Returns an ezbl-inst."
   (let ((instance
          (cond
           ;; Is an instance.
-          ((ezbl-inst-p inst))
+          ((ezbl-inst-p inst)
+           inst)
           ;; Is a buffer.
           ((bufferp inst)
            (with-current-buffer inst
