@@ -783,7 +783,7 @@ for more info):
 
 (defun ezbl-get-variable (inst var)
   "Return the value of VAR from the ezbl instance INST."
-  (ezbl-sync-request inst (concat "@" var)))
+  (gethash (intern-soft var) (ezbl-inst-vars inst)))
 
 (defun ezbl-run-js (inst js)
   "Execute the Javascript in JS on the Uzbl instance INST and
@@ -1018,10 +1018,10 @@ Sets the server-name parameter to the current value of `server-name'."
     mode-line-mule-info
     mode-line-modified
     mode-line-frame-identification
-    (:propertize (:eval (ezbl-run-js ezbl-inst "document.title"))
+    (:propertize (:eval (ezbl-get-variable ezbl-inst 'title))
                  face bold)
     " -- "
-    (:eval (ezbl-get-variable ezbl-inst "uri"))
+    (:eval (ezbl-get-variable ezbl-inst 'uri))
     "   "
     mode-line-modes
     (which-func-mode ("" which-func-format "--"))
