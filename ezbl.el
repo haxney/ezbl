@@ -1104,8 +1104,8 @@ information included with the event.
 
 INST is resolvable to an ezbl instance."
   (cond
-   ((eq event 'INSTANCE_START)) ; Ignored
-   ((eq event 'INSTANCE_EXIT)) ; Close process and stuff
+   ((eq event 'INSTANCE_START))
+   ((eq event 'INSTANCE_EXIT))
    ((eq event 'VARIABLE_SET)
     (if (string-match "\\([a-z0-9_]+\\) \\(str\\|int\\|float\\) \\(.*\\)" detail)
         (let ((var-name (intern (match-string-no-properties 1 detail)))
@@ -1113,22 +1113,22 @@ INST is resolvable to an ezbl instance."
               (value (match-string-no-properties 3 detail)))
           (puthash var-name value (ezbl-inst-vars inst)))
       (error "VARIABLE_SET event had invalid details: `%s'" detail)))
-   ;; ((eq event 'COMMAND_EXECUTED))
+   ((eq event 'COMMAND_EXECUTED))
    ;; ((eq event 'COMMAND_ERROR))
    ;; ((eq event 'GEOMETRY_CHANGED))
    ;; ((eq event 'FIFO_SET))
    ;; ((eq event 'SOCKET_SET))
    ((eq event 'LOAD_COMMIT)
     (puthash 'uri detail (ezbl-inst-vars inst)))
-   ((eq event 'LOAD_START)) ;; Nothing for now.
-   ((eq event 'LOAD_FINISHED)) ;; Nothing for now.
+   ((eq event 'LOAD_START))
+   ((eq event 'LOAD_FINISH))
    ;; ((eq event 'LOAD_ERROR))
-   ;; ((eq event 'LOAD_PROGRESS))
+   ((eq event 'LOAD_PROGRESS))
    ((eq event 'TITLE_CHANGED)
     (puthash 'title detail (ezbl-inst-vars inst)))
    ;; ((eq event 'DOWNLOAD_REQUEST))
-   ;; ((eq event 'LINK_HOVER))
-   ;; ((eq event 'LINK_UNHOVER))
+   ((eq event 'LINK_HOVER))
+   ((eq event 'LINK_UNHOVER))
    ;; ((eq event 'KEY_PRESS))
    ;; ((eq event 'KEY_RELEASE))
    ;; ((eq event 'SELECTION_CHANGED))
@@ -1143,8 +1143,7 @@ INST is resolvable to an ezbl instance."
    ((eq event 'PLUG_CREATED))
    ((eq event 'BUILTINS))
    (t
-    (ezbl-process-append inst (format "EVENT [%s] %s %s\n" app-name event detail)))
-  ))
+    (ezbl-process-append inst (format "EVENT [%s] %s %s\n" app-name event detail)))))
 
 (defun ezbl-process-append (inst string)
   "Insert STRING at the end of the process buffer of INST.
