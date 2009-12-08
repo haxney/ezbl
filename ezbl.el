@@ -1090,12 +1090,6 @@ and ANSWER is the string returned by the process."
   (tq-enqueue (ezbl-instance-tq inst) )
   )
 
-(defun ezbl-event-create-tq (inst)
-  "Create a transaction queue for INST.
-
-Appends the tq to INST."
-  (append (ezbl-get-instance inst) (tq-create (ezbl-instance-process inst))))
-
 (ezbl-init-commands)
 
 (provide 'ezbl)
