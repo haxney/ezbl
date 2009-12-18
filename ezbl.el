@@ -2,7 +2,7 @@
 ;;
 ;; Author: Daniel Hackney
 ;; Copyright (C) 2009 Daniel Hackney
-;; Version: 0.3
+;; Version: 0.4
 ;; URL: http://github.com/dhax/ezbl
 
 ;; This file is free software; you can redistribute it and/or modify it under
