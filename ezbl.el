@@ -437,16 +437,13 @@ of the right click context menus."))
      (format . "menu_editable_remove <label>")
      (doc . "Removes the entry LABEL from one of the right click context menus."))
 
-    ((name . "hardcopy`")
-     (format . "hardcopy`"))
+    ((name . "hardcopy")
+     (format . "hardcopy")
+     (doc . "open print dialog"))
 
-    - open print dialog
     ((name . "include")
-     (format . "include <file>"))
-
-    - read contents of file and interpret commands
-
-    )
+     (format . "include <file>")
+     (doc . "read contents of file and interpret commands")))
   "A list of commands which Uzbl accepts. These are used to
 generate the functions to call each command.
 
