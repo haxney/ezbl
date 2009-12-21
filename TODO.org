@@ -48,6 +48,41 @@ This is the TODO file for Ezbl. It is best viewed with [[http://orgmode.org][Org
    `ezbl-sync-request' would wait for. Or, the caller could be responsible for
    retrieving the value, but this is probably a bad idea.
 
+** Sanity checks for strings sent to Uzbl
+
+   Since Uzbl expects commands to terminate with a newline character, there is
+   an injection vulnerability if the command or its arguments contain a
+   newline. Ezbl should check any strings for newlines (and possibly other
+   troublesome characters) and raise an error if the command contains one.
+
+** Compare =ezbl-commands= with the =BUILTINS= event
+
+   When Uzbl starts up, it emits the =BUILTINS= event which includes a list of
+   all of the commands which it supports. Run a check to verify that Uzbl's
+   command list matches the specs in =ezbl-commands=.
+
+** Initialize =ezbl-inst-vars= when an inst starts
+
+   When Uzbl is started, many of its variables have default values, but do not
+   generate =VARIABLE_SET= events. This means that the instance's
+   =ezbl-inst-vars= does not actually match Uzbl's values, which could cause
+   problems.
+
+   The simplest way of remedying this is to iterate over =ezbl-variables= and
+   send the command:
+
+     #+BEGIN_SRC
+     set variable = @variable
+     #+END_SRC
+
+   to Uzbl. This will set the variable to its current value, but will emit the
+   =VARIABLE_SET= event, which is already configured to set the appropriate item
+   in =ezbl-inst-vars=.
+
+   This will slow down Ezbl's startup, but since there are only 55 variables (as
+   of Ezbl 2009.11.30), this should not add that much time. If it turns out that
+   the increased startup time is unacceptable, the initialization could be moved
+   to an idle timer, or be lazy loaded when (and if) the variable is requested.
 
 * Wishlist
   More far-fetched or non-crucial items. Not really a priority.
@@ -92,3 +127,15 @@ This is the TODO file for Ezbl. It is best viewed with [[http://orgmode.org][Org
    is that it makes it easy to use the existing Emacs buffer management tools to
    switch between Ezbl buffers. On the other hand, changing the name of the
    buffer frequently might cause Emacs some grief.
+** More powerful command format specification
+
+   Right now, the format only allows for literal characters and a finite number
+   of arguments. Some Uzbl commands can support repeating arguments, but the
+   format cannot express this. A sexp-based format, similar to
+   =mode-line-format= would give additional options for arguments, without
+   forcing the simpler commands to use more complex specifications.
+
+   Also, there are a number of commands which do not accept any arguments, so
+   the format could be omitted entirely. If a command spec lacked a format
+   attribute, then the function would use the name of the command as the format.
+
