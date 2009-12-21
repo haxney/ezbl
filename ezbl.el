@@ -1085,6 +1085,7 @@ process owning buffer."
         (set-marker (process-mark proc) (point)))
       (if moving (goto-char (process-mark proc))))))
 
+;; Should always remain at the end, just before "(provide 'ezbl)".
 (ezbl-command-init)
 
 (provide 'ezbl)
