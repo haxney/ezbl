@@ -1,7 +1,5 @@
 ;;; ezbl.el --- Emacs interface for Uzbl (uzbl.org)
 ;;
-;; Author: Daniel Hackney
-;; Copyright (C) 2009 Daniel Hackney
 ;; Version: 0.4
 ;; URL: http://github.com/dhax/ezbl
 
