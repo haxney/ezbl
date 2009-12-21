@@ -1,0 +1,40 @@
+Ezbl - Emacs interface for Uzbl (uzbl.org)
+
+This package creates an Emacs interface for Uzbl, allowing you to control Uzbl
+from within Emacs.
+
+* Requirements
+
+  - Uzbl (http://www.uzbl.org) version 2009.11.30 or greater. Older version will
+    not work.
+
+  - A patched version of Emacs (http://github.com/dhax/emacs/tree/xembed) which
+    supports embedding Xwidgets and the SOCK_SEQPACKET socket type. These
+    patches are currently (as of 2009-12-20) not available in the main Emacs
+    repository, nor in any released version.
+
+* Installation
+
+  Move the file "ezbl.el" to somewhere in your load-path. Add "(require 'ezbl)"
+  to your .emacs file, and run "ezbl-open" to launch a Uzbl instance.
+
+* Development
+
+  As of version 0.2, the "master" branch on http://github.com/dhax/ezbl should
+  be considered stable. Updates to that branch should not break existing
+  functionality, and experimental features will be developed in other branches
+  and merged to "master" once they are acceptably stable.
+
+* Related files
+
+  All of the documentation files (including this one) are in Emacs org-mode
+  format and are best viewed with a recent version of [[http://orgmode.org][org-mode]]. Being plain
+  text, however, they are still viewable in any text editor.
+
+  Some files of interest might be:
+
+  - NEWS.org: History of changes in each Ezbl version.
+
+  - COPYING: The license of Ezbl (GPLv3+).
+
+  - TODO.org: Known bugs and desired features.
