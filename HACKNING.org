@@ -1,0 +1,87 @@
+Ezbl hacking guide
+
+This file gives a high-level overview of what the different pieces of Ezbl do
+and how they fit together. The aim is to make it easier to get into hacking on
+Ezbl without having to read through the entire source (though it has been
+well-documented).
+
+* General concepts
+
+** Uzbl vs. Ezbl
+
+   Uzbl (or more specifically, uzbl-core) is a wrapper around the [[http://webkit.org/][WebKit]] browser
+   engine. It is a small C program which allows information to be passed between
+   WebKit and one or more external programs using a simple, text-based
+   interface.
+
+   Ezbl is an Emacs Lisp program which communicates with Uzbl and provides Emacs
+   functions and keybindings for accomplishing tasks with Uzbl.
+
+** Generated functions
+
+   Because Uzbl has a large number of variables, commands, and events, Ezbl
+   avoids having to maintain a large number of variables and functions by
+   keeping a list of each of the variables and commands (and eventually
+   events). The commands are stored in a list called =ezbl-commands=,
+   which stores alists describing the format, documentation, keybinding, and
+   interactive specification of each command.
+
+   Similarly, =ezbl-variables= stores a cons cell of the variable name and an
+   optional description.
+
+   As the last step of loading =ezbl.el=, the function =ezbl-command-init= loops
+   over each command spec and turns it into a function with
+   =ezbl-command-make-func=.
+
+** =ezbl-inst=
+
+   Each running Uzbl instance has a =cl= struct called an =ezbl-inst= associated
+   with it which stores the arguments passed to its command line, its process
+   object, the Uzbl pid, the output buffer, the buffer in which the Uzbl
+   instance is embedded, and a hashtable tracking the instance's variables. All
+   of the Uzbl commands expect =ezbl-inst= objects as the first argument.
+
+   Because there are a number of different ways of referring to a Uzbl instance,
+   such as its pid, its process, one of its buffers, etc, the function
+   =ezbl-inst-get= is used to attempt to resolve one of these values into an
+   =ezbl-inst=. All of the accessors of =ezbl-inst= fields first attempt to
+   resolve their argument to an =ezbl-inst= with =ezbl-inst-get=. This means
+   that the following code is valid, and will return the display buffer of the
+   =ezbl-inst= with pid =1234=, assuming one exists.
+
+     #+BEGIN_SRC emacs-lisp
+     (ezbl-inst-display-buffer 1234)
+     #+END_SRC
+
+* Communication with Uzbl
+
+  The key feature of Uzbl which makes it suitable for integrating with Emacs is
+  that it is controlled entirely by sending and receiving text commands over one
+  of a few straightforward channels: standard input/output, a FIFO, or a UNIX
+  socket.
+
+  Ezbl communicates with Uzbl through standard input and output, sending
+  commands and listening for output.
+
+** Variables
+
+   Since Uzbl 2009.11.07, any time a variable is set, the =VARIABLE_SET= event
+   is emitted. Ezbl uses this to avoid having to make a request to Uzbl each
+   time it wants to access the value of a Uzbl variable.
+
+   When Ezbl receives the =VARIABLE_SET= event, it takes the variable value and
+   puts it in the =ezbl-inst-vars= hash under the interned symbol name of the
+   variable. For example, if Uzbl emitted a =VARIABLE_SET= event saying that the
+   =uri= variable had been set to =http://www.example.com=, Ezbl would run
+
+     #+BEGIN_SRC emacs-lisp
+
+     (puthash 'uri "http://www.example.com" (ezbl-inst-vars inst))
+
+     #+END_SRC
+
+   where =inst= is the =ezbl-inst= which fired the event. Retrieving a variable
+   is done with the =ezbl-variable-get=, which simply uses =gethash= to get the
+   value. This is much faster than querying Uzbl each time, and avoids duplicate
+   queries for variables which have not changed.
+
