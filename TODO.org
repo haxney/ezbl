@@ -96,6 +96,23 @@ This is the TODO file for Ezbl. It is best viewed with [[http://orgmode.org][Org
    the increased startup time is unacceptable, the initialization could be moved
    to an idle timer, or be lazy loaded when (and if) the variable is requested.
 
+** Don't use =ezbl-xembed-ready-hook= in =ezbl-open= to set the URI
+
+   There is probably a race condition in =ezbl-open= with regards to the setting
+   of the initial URI. =ezbl-open= first calls =ezbl-embed= to create an Xwidget
+   which starts Uzbl once the Xwidget is ready. If the Xwidget finishes
+   initializing and triggers =ezbl-xwidget-handler= before the hook is added,
+   then the command to set the URI would not be executed.
+
+   This may not actually be a problem, since it could be that =ezbl-open= runs
+   to completion before the =xwidget-event= keypress is handled, which would
+   guarantee that =ezbl-xwidget-ready-hook= has been set before
+   =ezbl-xwidget-handler= tries to run the hook.
+
+   An alternative is to run the URI setting command upon receiving the
+   =INSTANCE_START= event. This would probably require having a general hook
+   system for each event, which would be a separate task.
+
 * Wishlist
 
   More far-fetched or non-crucial items. Not really a priority.
@@ -175,4 +192,25 @@ This is the TODO file for Ezbl. It is best viewed with [[http://orgmode.org][Org
    each variable, either a string, int, or float. Ezbl could track these as
    well, in the =ezbl-variables= list and ensure that the types are correct when
    setting and getting variables.
+
+** Specify default value in =ezbl-variables=
+
+   Some variables, such as =cookie_handler= or =forward_keys= should have
+   default values other than those given by Uzbl, so allow them to specify a
+   default value. They probably have a basic ability to expand variables or
+   sexps so that instance-specific values can still be used as default values.
+
+   However, there is a bit of a problem in that people may want to change these
+   default values, so it would be nice to have the variables (or at least their
+   default values) available through =defcustom=. It would be nice to be able to
+   avoid having to list each variable twice, once for the =defcustom= and again
+   to get a list of specifications.
+
+   Perhaps a similar thing could be done as with =ezbl-command-init=, where the
+   specifications are looped over and a =defcustom= declaration is generated for
+   each.
+
+** Rename =ezbl-embed= to =ezbl-xwidget-embed=
+
+   This makes it more consistent with other Xwidget functions and variables.
 
