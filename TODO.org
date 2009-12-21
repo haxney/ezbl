@@ -169,3 +169,10 @@ This is the TODO file for Ezbl. It is best viewed with [[http://orgmode.org][Org
    the format could be omitted entirely. If a command spec lacked a format
    attribute, then the function would use the name of the command as the format.
 
+** Store variable type in =ezbl-inst-vars=
+
+   Uzbl keeps track of and returns (in the =VARIABLE_SET= event) the type of
+   each variable, either a string, int, or float. Ezbl could track these as
+   well, in the =ezbl-variables= list and ensure that the types are correct when
+   setting and getting variables.
+
