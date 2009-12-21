@@ -11,10 +11,10 @@ This file is about changes in Ezbl.
 
 *** Cookie handler
 
-    Ezbl is now able to honor cookie PUT and GET requests from Uzbl, using Uzbl's
-    (relatively) new "talk_to_socket" system. This means that it is not having to
-    spawn a Python process for each and every cookie on every page you visit, but
-    is talking over a UNIX domain socket (which is fast).
+    Ezbl is now able to honor cookie PUT and GET requests from Uzbl, using
+    Uzbl's (relatively) new "talk_to_socket" system. This means that it is not
+    having to spawn a Python process for each and every cookie on every page you
+    visit, but is talking over a UNIX domain socket (which is fast).
 
     This, combined with the new event system has enabled the following:
 
@@ -29,17 +29,18 @@ This file is about changes in Ezbl.
 
     This is largely related to the event and cookie handlers, but it bears
     repeating. In a few tests of loading yahoo.com, Ezbl would take about 30
-    seconds to finish loading the page. That time has now shrunk to just over 2.5
-    seconds. By using the event manager to let Uzbl notify us of changes, rather
-    than querying and polling, the amount of dead-time has decreased
+    seconds to finish loading the page. That time has now shrunk to just over
+    2.5 seconds. By using the event manager to let Uzbl notify us of changes,
+    rather than querying and polling, the amount of dead-time has decreased
     dramatically. One commit in particular (d99f336) is responsible for the
     majority of this speedup.
 
 *** New Emacs dependency
 
     Uzbl uses a special kind of socket type (SOCK_SEQPACKET) for its cookie
-    handlers, and Emacs doesn't support such sockets (before 23.2, which I helped
-    to add), so you will need to build a custom version of Emacs, available here:
+    handlers, and Emacs doesn't support such sockets (before 23.2, which I
+    helped to add), so you will need to build a custom version of Emacs,
+    available here:
 
     http://github.com/dhax/emacs
 
@@ -51,17 +52,17 @@ This file is about changes in Ezbl.
     package. This cut down on a lot of the boring and redundant checking and
     verifying code.
 
-    Also note that in an effort to save those precious electrons, all occurrences
-    of `ezbl-instance' have been replaced with `ezbl-inst'.
+    Also note that in an effort to save those precious electrons, all
+    occurrences of `ezbl-instance' have been replaced with `ezbl-inst'.
 
 *** Restructured naming system
 
-    In order to better align with the Emacs convention of getting fake namespaces
-    with variable prefixes, the function and variable names have been changed to
-    adhere to a more "least-to-most specific" pattern. That is, what used to be
-    `ezbl-get-inst' is now `ezbl-inst-get', so that it shows up next to
-    `ezbl-inst-p' when sorted alphabetically. This is mostly a cosmetic change, so
-    a simple find and replace will fix any compatibility issues.
+    In order to better align with the Emacs convention of getting fake
+    namespaces with variable prefixes, the function and variable names have been
+    changed to adhere to a more "least-to-most specific" pattern. That is, what
+    used to be `ezbl-get-inst' is now `ezbl-inst-get', so that it shows up next
+    to `ezbl-inst-p' when sorted alphabetically. This is mostly a cosmetic
+    change, so a simple find and replace will fix any compatibility issues.
 
 *** Much less use of `ezbl-sync-request'
 
@@ -140,9 +141,9 @@ This file is about changes in Ezbl.
 
 **** Getting and setting
 
-     Rather than manually accessing the fields of the instance alist, a family of
-     functions has been created to handle getting and setting the values of the
-     instance.
+     Rather than manually accessing the fields of the instance alist, a family
+     of functions has been created to handle getting and setting the values of
+     the instance.
 
 *** Allow `ezbl-get-instance' to search for a pid.
 
