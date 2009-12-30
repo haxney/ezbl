@@ -1,0 +1,159 @@
+Ezbl NEWS -- History of Ezbl changes.
+
+This file is about changes in Ezbl.
+
+* Version 0.3
+** User-visible Changes
+*** Automatically-resizing xwidgets
+
+    If you change the size of the window containing a browser window, Ezbl will
+    automatically resize the xwidget to fit the new size.
+
+*** Cookie handler
+
+    Ezbl is now able to honor cookie PUT and GET requests from Uzbl, using
+    Uzbl's (relatively) new "talk_to_socket" system. This means that it is not
+    having to spawn a Python process for each and every cookie on every page you
+    visit, but is talking over a UNIX domain socket (which is fast).
+
+    This, combined with the new event system has enabled the following:
+
+*** No more handler.py script
+
+    Ezbl is now 100% Emacs Lisp, and does not need to launch external processes
+    (aside from Uzbl, of course :). This is largely achieved through the new
+    event-manager system, which lets Uzbl notify Ezbl of changes and events over
+    Standard Output, making for a very quick communication.
+
+*** Much faster performance
+
+    This is largely related to the event and cookie handlers, but it bears
+    repeating. In a few tests of loading yahoo.com, Ezbl would take about 30
+    seconds to finish loading the page. That time has now shrunk to just over
+    2.5 seconds. By using the event manager to let Uzbl notify us of changes,
+    rather than querying and polling, the amount of dead-time has decreased
+    dramatically. One commit in particular (d99f336) is responsible for the
+    majority of this speedup.
+
+*** New Emacs dependency
+
+    Uzbl uses a special kind of socket type (SOCK_SEQPACKET) for its cookie
+    handlers, and Emacs doesn't support such sockets (before 23.2, which I
+    helped to add), so you will need to build a custom version of Emacs,
+    available here:
+
+    http://github.com/dhax/emacs
+
+    Note that you need the "xembed" branch of that repository.
+** Internal Changes
+*** `ezbl-inst' (formerly `ezbl-instances') is now a CL struct
+
+    ezbl-inst is now defined by a defstruct from the CL (Common Lisp)
+    package. This cut down on a lot of the boring and redundant checking and
+    verifying code.
+
+    Also note that in an effort to save those precious electrons, all
+    occurrences of `ezbl-instance' have been replaced with `ezbl-inst'.
+
+*** Restructured naming system
+
+    In order to better align with the Emacs convention of getting fake
+    namespaces with variable prefixes, the function and variable names have been
+    changed to adhere to a more "least-to-most specific" pattern. That is, what
+    used to be `ezbl-get-inst' is now `ezbl-inst-get', so that it shows up next
+    to `ezbl-inst-p' when sorted alphabetically. This is mostly a cosmetic
+    change, so a simple find and replace will fix any compatibility issues.
+
+*** Much less use of `ezbl-sync-request'
+
+    It was one of the biggest culprits in slowing down the operation of Ezbl,
+    since it has to repeatedly scan for matching regular expressions. Variables
+    are now handled by keeping a hashtable of the variable names
+* Version 0.2
+  This marks the first release that is actually somewhat usable for regular
+  browsing, as Ezbl can be launched without manually running Elisp.
+
+** User-visible changes
+*** Most Ezbl commands are interactive
+
+    Commands such as `ezbl-command-uri' or `ezbl-command-back' are now
+    interactive, and so can be invoked through "M-x" or bound to keys.
+
+    They are invoked with the "inst" argument set to `nil', which causes them to
+    look in the current buffer for an `ezbl-instance' variable. This means that
+    they will work as expected in Ezbl display buffers.
+
+*** Ezbl major mode
+
+    Ezbl display buffers are now read-only and are have the major mode
+    `ezbl-mode'.
+
+*** Add key bindings for Ezbl commands
+
+    The interactive Ezbl commands now have default key bindings, making
+    navigation much easier.
+
+*** Clean up mode-line
+
+    The mode-line now looks more like the regular Emacs default, with the page
+    name in bold and the URI separated from the page name by spaces. Also,
+    display of the major mode now works properly.
+* Version 0.1.2
+** User-visible changes
+
+*** Handler script for Uzbl callbacks.
+
+    Emacs can now implement handlers for cookies, history, downloads, and so
+    on. Currently, the handlers are unused.
+
+*** Buffer names
+
+    The display and output buffers are now called "*ezbl-display-1234*" and
+    "*ezbl-output-1234*", respectively, for a Uzbl process with the pid
+    "1234". This may be more cumbersome when attempting to select a particular
+    display buffer by name, but other selection methods could be used. This
+    decision may be revisited.
+
+*** Remove "name" property from ezbl instances
+
+    Since there is really no string identifier which will persist for the
+    duration of an instance, abandon the "name" field altogether. The process id
+    is used to distinguish instances instead.
+
+*** Hide the output buffer from the buffer listing
+
+    The user will not need to look at the output buffer (which captures the
+    stdout of the Uzbl process), so hide it from display. This also disables
+    undo recording of the buffer, which should save some memory.
+
+*** Use an Ezbl-specific mode line
+
+  The mode line is modified to display the current page title and URI. This
+  display is updated whenever Emacs decides to recompute the mode line (which
+  seems to be fairly often).
+
+** Internal changes:
+
+*** Ezbl instances
+
+    They now contain the arguments passed to the Uzbl command line, the process
+    object, the pid, and the output and display buffers.
+
+**** Getting and setting
+
+     Rather than manually accessing the fields of the instance alist, a family
+     of functions has been created to handle getting and setting the values of
+     the instance.
+
+*** Allow `ezbl-get-instance' to search for a pid.
+
+    If the argument provided is an integer, checks `ezbl-instances' for an
+    instance with a matching pid.
+* Version 0.1.1
+** User-visible changes
+*** ezbl-open
+    Add the `ezbl-open' function to create a buffer, embed a Uzbl window, and
+    switch to it.
+* Version 0.1
+  Just barely supports embedding a Uzbl window in a buffer, not much else for
+  now.

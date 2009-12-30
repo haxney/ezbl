@@ -1,0 +1,184 @@
+Ezbl hacking guide
+
+This file gives a high-level overview of what the different pieces of Ezbl do
+and how they fit together. The aim is to make it easier to get into hacking on
+Ezbl without having to read through the entire source (though it has been
+well-documented).
+
+* General concepts
+
+** Uzbl vs. Ezbl
+
+   Uzbl (or more specifically, uzbl-core) is a wrapper around the [[http://webkit.org/][WebKit]] browser
+   engine. It is a small C program which allows information to be passed between
+   WebKit and one or more external programs using a simple, text-based
+   interface.
+
+   Ezbl is an Emacs Lisp program which communicates with Uzbl and provides Emacs
+   functions and keybindings for accomplishing tasks with Uzbl.
+
+** Generated functions
+
+   Because Uzbl has a large number of variables, commands, and events, Ezbl
+   avoids having to maintain a large number of variables and functions by
+   keeping a list of each of the variables and commands (and eventually
+   events). The commands are stored in a list called =ezbl-commands=,
+   which stores alists describing the format, documentation, keybinding, and
+   interactive specification of each command.
+
+   Similarly, =ezbl-variables= stores a cons cell of the variable name and an
+   optional description.
+
+   As the last step of loading =ezbl.el=, the function =ezbl-command-init= loops
+   over each command spec and turns it into a function with
+   =ezbl-command-make-func=.
+
+** =ezbl-inst=
+
+   Each running Uzbl instance has a =cl= struct called an =ezbl-inst= associated
+   with it which stores the arguments passed to its command line, its process
+   object, the Uzbl pid, the output buffer, the buffer in which the Uzbl
+   instance is embedded, and a hashtable tracking the instance's variables. All
+   of the Uzbl commands expect =ezbl-inst= objects as the first argument.
+
+   Because there are a number of different ways of referring to a Uzbl instance,
+   such as its pid, its process, one of its buffers, etc, the function
+   =ezbl-inst-get= is used to attempt to resolve one of these values into an
+   =ezbl-inst=. All of the accessors of =ezbl-inst= fields are advised to
+   attempt to resolve their argument to an =ezbl-inst= with =ezbl-inst-get=
+   before their regular execution. This means that the following code is valid,
+   and will return the display buffer of the =ezbl-inst= with pid =1234=,
+   assuming one exists.
+
+     #+BEGIN_SRC emacs-lisp
+     (ezbl-inst-display-buffer 1234)
+     #+END_SRC
+
+* Communication with Uzbl
+
+  The key feature of Uzbl which makes it suitable for integrating with Emacs is
+  that it is controlled entirely by sending and receiving text commands over one
+  of a few straightforward channels: standard input/output, a FIFO, or a UNIX
+  socket.
+
+  Ezbl communicates with Uzbl through standard input and output, sending
+  commands and listening for output.
+
+** Variables
+
+   Since Uzbl 2009.11.07, any time a variable is set, the =VARIABLE_SET= event
+   is emitted. Ezbl uses this to avoid having to make a request to Uzbl each
+   time it wants to access the value of a Uzbl variable.
+
+   When Ezbl receives the =VARIABLE_SET= event, it takes the variable value and
+   puts it in the =ezbl-inst-vars= hash under the interned symbol name of the
+   variable. For example, if Uzbl emitted a =VARIABLE_SET= event saying that the
+   =uri= variable had been set to =http://www.example.com=, Ezbl would run
+
+     #+BEGIN_SRC emacs-lisp
+
+     (puthash 'uri "http://www.example.com" (ezbl-inst-vars inst))
+
+     #+END_SRC
+
+   where =inst= is the =ezbl-inst= which fired the event. Retrieving a variable
+   is done with the =ezbl-variable-get=, which simply uses =gethash= to get the
+   value. This is much faster than querying Uzbl each time, and avoids duplicate
+   queries for variables which have not changed.
+
+** Cookies
+
+*** Handling in Uzbl
+
+    Currently, in the absence of synchronous events, cookies are handled in Uzbl
+    either by spawning a subprocess and waiting for its output or by connecting
+    to a socket and making a request. Because of the (potentially) large number
+    of cookies loaded on a given page, spawning a subprocess would create an
+    unacceptable (or at least inconvenient) overhead, so the socket-based
+    approach is used.
+
+    The variable =cookie_handler= is set to =talk_to_socket <filename>=, where
+    =<filename>= is the path of a UNIX socket (also known as a "local" or
+    "domain" socket) to which to connect. When Uzbl decides to make a cookie
+    request, it attempts to connect to the socket, and if successful, sends a
+    request and waits for a response.
+
+    As Uzbl uses the =SOCK_SEQPACKET= socket type, a patched version of Emacs is
+    necessary, as Emacs does not support this socket type. The upcoming Emacs
+    version 23.2 is scheduled to include support for =SOCK_SEQPACKET= sockets,
+    however.
+
+*** Ezbl's operation
+
+    Ezbl sets up Emacs to listen on the socket file and accept connections
+    initiated by Uzbl. When Uzbl makes a connection, it immediately sends a
+    cookie request and waits for Emacs to respond. Ezbl processes the request
+    using the built-in =url-cookie= library and sends the result back to Uzbl.
+
+    There are two types of cookie requests made by Uzbl, =GET= and =PUT=. =GET=
+    requests instruct Ezbl to retrieve a cookie to be sent to the server, and
+    =PUT= requests tell Ezbl to store a cookie. Ezbl does not send any data back
+    to Uzbl for =PUT= requests.
+
+* Embedded Uzbl window
+
+  Ezbl makes use of the Xwidget patches written by Joakim Verona to embed a Uzbl
+  window in an Emacs buffer. The patches are still in a fairly early state and
+  show only a black box in place of the Xwidget when the buffer containing the
+  embedded Xwidget is not selected. This is not insurmountable, and will
+  hopefully be fixed at a later point.
+
+** Display vs. output buffers
+
+   Each =ezbl-inst= has both a display buffer and an output buffer. The display
+   buffer is the one containing the Xwidget, and the output buffer receives the
+   output from the Uzbl process. Both buffers have their local value of
+   =ezbl-inst= set to the instance to which they correspond.
+
+** Embedding the Xwidget
+
+   The Xwidget is implemented as a text property in an Emacs buffer with a
+   number of attributes which control its behavior. Because Uzbl needs to be
+   given the display socket into which it is to be embedded at launch time, the
+   Xwidget has to be started before Uzbl. Once the Xwidget has finished
+   initializing, it triggers a virtual "keypress" called =xwidget-event=. By
+   binding =ezbl-xwidget-handler= to this keypress event (which includes the
+   socket id for the Xwidget), Uzbl can be started after the Xwidget is
+   initialized.
+
+   Thus, the control flow looks like this:
+
+     - =ezbl-embed= sets a binding for =xwidget-event= to =ezbl-xwidget-handler=
+       in the =current-local-map=.
+
+     - =ezbl-xwidget-insert= adds the =xwidget= text-property to a character in
+       the current buffer.
+
+     - The Xwidget is initialized and emits a virtual =xwidget-event= keypress,
+       which calls =ezbl-xwidget-handler=.
+
+     - =ezbl-xwidget-handler= starts the Uzbl instance, passing it the socket id
+       of the Xwidget.
+
+** Handling key presses
+
+   Due to the current limitations of the Xwidget patches, key presses in the
+   Ezbl display buffer are not passed through to the underlying Uzbl process.
+   Currently, this is not dealt with, but a solution is discussed in the
+   "TODO.org" file.
+
+** Resizing the Xwidget
+
+   If the size of the window displaying the Xwidget changes, the Xwidget is
+   automatically resized. In =ezbl-mode=, the local value of
+   =window-configuration-change-hook= is set to =ezbl-fill-window=, which
+   resizes the Xwidget to fill the new window size.
+
+* Miscellaneous
+
+** First run
+
+   =ezbl-open= runs =ezbl-init= which checks for various required functionality
+   before starting. It only runs when the variable =ezbl-initialized= is =nil=,
+   and sets it to =t= after the first run, so it only runs the first time an
+   Ezbl instance is launched.

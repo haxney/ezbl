@@ -471,15 +471,19 @@ All variables must be enclosed in angle brackets.")
   "The variables available from Uzbl.")
 
 (defvar ezbl-xwidget-id-counter 0
-  "Counter for xwidget IDs. IDs must be unique, or Emacs will crash.")
+  "Keeps track of the current value to assign to newly-created xwidgets.
+
+IDs must be unique, or Emacs will crash.")
 
 (defconst ezbl-xwidget-type 3
   "The type attribute for xwidget embedded widgets.
 
-Don't ask me why this is.")
+For whatever reason, the Xwidget patch specifies that embedded X windows have
+this type.")
 
 (defvar ezbl-xembed-ready-hook nil
   "Commands to run when an ezbl instance receives the
+
 `xembed-ready' signal.")
 
 (defun ezbl-command-get-args (command)
@@ -794,8 +798,8 @@ HEIGHT - The height of the widget"
 (defun ezbl-embed ()
   "Insert an xwidget into the current buffer.
 
-Also, set a callback (using the xwidget-event \"keybinding\") to
-launch Uzbl once the widget is fully initialized."
+Also, set a callback (using the `xwidget-event' \"keybinding\")
+to launch Uzbl once the widget is fully initialized."
   (save-excursion
     (use-local-map (make-sparse-keymap))
     (define-key (current-local-map) [(xwidget-event)] 'ezbl-xwidget-handler)
@@ -1083,6 +1087,7 @@ process owning buffer."
         (set-marker (process-mark proc) (point)))
       (if moving (goto-char (process-mark proc))))))
 
+;; Should always remain at the end, just before "(provide 'ezbl)".
 (ezbl-command-init)
 
 (provide 'ezbl)

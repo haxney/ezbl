@@ -1,0 +1,216 @@
+This is the TODO file for Ezbl. It is best viewed with [[http://orgmode.org][Org-mode]] in Emacs.
+
+* Major needed features
+
+  Features that are essential before Ezbl can be considered usable in a
+  non-development capacity.
+
+** Keyboard input
+
+   Currently, all keypresses get caught by Emacs, and are not passed on to the
+   underlying Uzbl instance. The "xdotool" program seems to be the best and
+   simplest bet at implementing the required functionality, as it can simulate
+   keypresses to arbitrary applications. It will require a fork for each
+   keypress, but the cost of forking (on Linux at least) is low enough that it
+   shouldn't affect the user.
+
+** Fixed cookie support
+
+   Currently, the cookie handling by `url-cookie' is not quite right. It splits up
+   cookies when they shouldn't be split and doesn't handle secure cookies
+   properly. This hopefully will not require a patch to `url-cookie', but it
+   might.
+
+   Another option is to use the Uzbl-provided cookie-daemon, which would remove
+   this complication. Probably the best thing to do is to have a defcustom for
+   choosing between the two.
+
+** Clean shutdown
+
+   Right now, Ezbl does not clean up process or display buffers created when
+   opening Uzbl instances. These don't contribute that much to memory usage, but
+   they should nevertheless be cleaned up when Uzbl exits. This is probably best
+   done with a handler for the INSTANCE_EXIT event.
+
+* Minor additions/fixes
+
+  Changes which are not crucial, but would be nice in the near-term and aren't
+  that much work.
+
+** Selectable cookie handler
+
+   Should be able to use either Emacs' native `url-cookie' library or the
+   Uzbl-provided "uzbl-cookie-daemon" python program.
+
+** Clean up keyword handling in `ezbl-inst-start'
+
+   I think that the `cl' package has a more effective way of handling keywords.
+
+** Remove `ezbl-sync-request'
+
+   This was needed before the Uzbl event manager, but is horribly inefficient,
+   and was responsible for a number of heinous slowdowns. Currently, it is only
+   used by `ezbl-run-js' for getting the result of a JavaScript execution, but
+   there should be a better way of doing this.
+
+   One solution is to use the custom event system to tell Uzbl to trigger an
+   event which prints the result of the execution, but the problem would be
+   getting the filter function to communicate this value back to
+   `ezbl-run-js'. The filter function could set a temporary variable, which
+   `ezbl-sync-request' would wait for. Or, the caller could be responsible for
+   retrieving the value, but this is probably a bad idea.
+
+** Sanity checks for strings sent to Uzbl
+
+   Since Uzbl expects commands to terminate with a newline character, there is
+   an injection vulnerability if the command or its arguments contain a
+   newline. Ezbl should check any strings for newlines (and possibly other
+   troublesome characters) and raise an error if the command contains one.
+
+** Compare =ezbl-commands= with the =BUILTINS= event
+
+   When Uzbl starts up, it emits the =BUILTINS= event which includes a list of
+   all of the commands which it supports. Run a check to verify that Uzbl's
+   command list matches the specs in =ezbl-commands=.
+
+** Initialize =ezbl-inst-vars= when an inst starts
+
+   When Uzbl is started, many of its variables have default values, but do not
+   generate =VARIABLE_SET= events. This means that the instance's
+   =ezbl-inst-vars= does not actually match Uzbl's values, which could cause
+   problems.
+
+   The simplest way of remedying this is to iterate over =ezbl-variables= and
+   send the command:
+
+     #+BEGIN_SRC
+     set variable = @variable
+     #+END_SRC
+
+   to Uzbl. This will set the variable to its current value, but will emit the
+   =VARIABLE_SET= event, which is already configured to set the appropriate item
+   in =ezbl-inst-vars=.
+
+   This will slow down Ezbl's startup, but since there are only 55 variables (as
+   of Ezbl 2009.11.30), this should not add that much time. If it turns out that
+   the increased startup time is unacceptable, the initialization could be moved
+   to an idle timer, or be lazy loaded when (and if) the variable is requested.
+
+** Don't use =ezbl-xembed-ready-hook= in =ezbl-open= to set the URI
+
+   There is probably a race condition in =ezbl-open= with regards to the setting
+   of the initial URI. =ezbl-open= first calls =ezbl-embed= to create an Xwidget
+   which starts Uzbl once the Xwidget is ready. If the Xwidget finishes
+   initializing and triggers =ezbl-xwidget-handler= before the hook is added,
+   then the command to set the URI would not be executed.
+
+   This may not actually be a problem, since it could be that =ezbl-open= runs
+   to completion before the =xwidget-event= keypress is handled, which would
+   guarantee that =ezbl-xwidget-ready-hook= has been set before
+   =ezbl-xwidget-handler= tries to run the hook.
+
+   An alternative is to run the URI setting command upon receiving the
+   =INSTANCE_START= event. This would probably require having a general hook
+   system for each event, which would be a separate task.
+
+* Wishlist
+
+  More far-fetched or non-crucial items. Not really a priority.
+
+** Unit-tested codebase
+
+   Ezbl is starting to get to the point that a robust set of unit tests could be
+   useful, especially if the test suite could include some profiling to identify
+   bottlenecks.
+
+** Download handler
+
+   Ezbl currently does not handle download requests at all. Set up a default
+   download path, and ask the user what to do when a download is requested.
+
+** Implement "It's all text"-like functionality
+
+   "It's all Text" is a Firefox extension which allows the contents of a text
+   area to be edited with an external program. It copies the contents to a file,
+   launches the editor, and then monitors the file for changes and updates the
+   text area if the file changes. It should be fairly straightforward to
+   implement this within Ezbl. Uzbl provides an "extedit.js" file which does
+   exactly this.
+
+** Scheme handler
+
+   Should be able to take some action when it receives "mailto:" "irc:", etc
+   URIs. This should have some way of being user-customizable.
+
+** Customizable events/handlers
+
+   Both events and handlers should be customizable by the user. There should be
+   a variable for each event or handler which is a list of functions to call.
+
+** Password manager
+
+   Remember passwords for sites. Make sure it is easy to opt-out completely.
+
+** Updated handling of browser information
+
+   Ezbl should display the page title, URL, and currently hovered link, as well as the loading progress
+   and the site favicon. The four main places this information could be put are:
+
+   - The mode-line
+   - The buffer fringe
+   - Uzbl's status line
+   - Read-only lines in the display buffer.
+
+   Certain pieces of information, such as the URL, would be nice to have in the
+   buffer, since then it would be easier to copy the URL to the kill-ring, which
+   would be useful.
+
+** Display buffer naming
+
+   Should the display buffer have an unchanging name, such as its current
+   "*ezbl-display-<pid>*", or should it match the title of the page, being
+   updated as the page title changes? The advantage of updating the buffer name
+   is that it makes it easy to use the existing Emacs buffer management tools to
+   switch between Ezbl buffers. On the other hand, changing the name of the
+   buffer frequently might cause Emacs some grief.
+
+** More powerful command format specification
+
+   Right now, the format only allows for literal characters and a finite number
+   of arguments. Some Uzbl commands can support repeating arguments, but the
+   format cannot express this. A sexp-based format, similar to
+   =mode-line-format= would give additional options for arguments, without
+   forcing the simpler commands to use more complex specifications.
+
+   Also, there are a number of commands which do not accept any arguments, so
+   the format could be omitted entirely. If a command spec lacked a format
+   attribute, then the function would use the name of the command as the format.
+
+** Store variable type in =ezbl-inst-vars=
+
+   Uzbl keeps track of and returns (in the =VARIABLE_SET= event) the type of
+   each variable, either a string, int, or float. Ezbl could track these as
+   well, in the =ezbl-variables= list and ensure that the types are correct when
+   setting and getting variables.
+
+** Specify default value in =ezbl-variables=
+
+   Some variables, such as =cookie_handler= or =forward_keys= should have
+   default values other than those given by Uzbl, so allow them to specify a
+   default value. They probably have a basic ability to expand variables or
+   sexps so that instance-specific values can still be used as default values.
+
+   However, there is a bit of a problem in that people may want to change these
+   default values, so it would be nice to have the variables (or at least their
+   default values) available through =defcustom=. It would be nice to be able to
+   avoid having to list each variable twice, once for the =defcustom= and again
+   to get a list of specifications.
+
+   Perhaps a similar thing could be done as with =ezbl-command-init=, where the
+   specifications are looped over and a =defcustom= declaration is generated for
+   each.
+
+** Rename =ezbl-embed= to =ezbl-xwidget-embed=
+
+   This makes it more consistent with other Xwidget functions and variables.
+
