@@ -295,6 +295,10 @@ Uzbl page.
 
 * search with no string will search for the next/previous
   occurrence of the string previously searched for."))
+    ((name . "search_clear")
+     (format . "search_clear")
+     (interactive . "U")
+     (doc . "Unmark and clear the search string"))
 
     ((name . "toggle_insert_mode")
      (format . "toggle_insert_mode <optional_state>")
