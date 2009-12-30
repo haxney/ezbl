@@ -134,43 +134,6 @@ variable 'var' is printed.
 
 * use this to print the value of a variable."))
 
-    ((name . "bind")
-     (format . "bind <string> = <command>")
-     (interactive . "U\nsKey sequence: \nsCommand: ")
-     (doc . "Sets the character sequence STRING to invoke COMMAND
-     when typed interactively in Uzbl.
-
-* there are a few tricks you can do:
-
-  - STRING ends with an underscore: the command will only be
-    invoked after pressing return/enter. If the user enters text
-    where STRING has the underscore, %s in the COMMAND string
-    will be replaced by this text. (optional)
-
-  - STRING ends with an asterisk: similar behavior as with an
-    underscore, but also makes the binding incremental (i.e. the
-    command will be invoked on every keystroke).
-
-  - STRING ends on a different character: you need to type the
-    full string, which will trigger the command immediately,
-    without pressing enter/return.
-
-* examples:
-  - bind o _ = uri %s
-                + uzbl will load the url when you type: 'o '
-  - bind /* = search %s
-
-    + a search command which is called on every character typed
-      after the slash, letting you see the search narrow down
-      while typing.
-
-    + Hitting return, enter or esc will terminate the search.
-
-  - bind ZZ = exit
-
-    + When you type ZZ and nothing else, the exit command will be
-      triggered immediately."))
-
     ((name . "back")
      (format . "back")
      (interactive . "U")
