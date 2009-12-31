@@ -1105,16 +1105,20 @@ process owning buffer."
         (set-marker (process-mark proc) (point)))
       (if moving (goto-char (process-mark proc))))))
 
-(defun ezbl-key-xdotool-exec (cmd &rest args)
+(defun* ezbl-key-xdotool-exec (cmd &key (bin-path ezbl-key-xdotool-path) args)
   "Synchronously call \"xdotool\" and return its result.
 
 CMD is the command to supply to xdotool.
 
-ARGS is the remaining list of arguments to CMD."
+:bin-path can override the default path to search for xdotool.
+
+:args is the remaining list of arguments to CMD."
+  (when (stringp args)
+    (setq args (list args)))
   (replace-regexp-in-string "\\(^[[:space:]\\n]*\\|[[:space:]\\n]*$\\)" ""
                             (shell-command-to-string
                              (mapconcat 'identity
-                                        (append (list ezbl-key-xdotool-path cmd) args) " "))))
+                                        (append (list bin-path cmd) args) " "))))
 
 ;; Should always remain at the end, just before "(provide 'ezbl)".
 (ezbl-command-init)
