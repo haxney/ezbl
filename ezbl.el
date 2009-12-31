@@ -1105,20 +1105,16 @@ process owning buffer."
         (set-marker (process-mark proc) (point)))
       (if moving (goto-char (process-mark proc))))))
 
-(defun* ezbl-key-xdotool-exec (cmd &key (bin-path ezbl-key-xdotool-path) args)
-  "Synchronously call \"xdotool\" and return its result.
+(defun* ezbl-key-press (window key &key (bin-path ezbl-key-xdotool-path))
+  "Send a keypress to the Uzbl instance.
 
-CMD is the command to supply to xdotool.
+WINDOW: the X Window ID of the window to send the keypress.
 
-:bin-path can override the default path to search for xdotool.
+KEY: The key code to send.
 
-:args is the remaining list of arguments to CMD."
-  (when (stringp args)
-    (setq args (list args)))
-  (replace-regexp-in-string "\\(^[[:space:]\\n]*\\|[[:space:]\\n]*$\\)" ""
-                            (shell-command-to-string
-                             (mapconcat 'identity
-                                        (append (list bin-path cmd) args) " "))))
+:bin-path Optionally override the global path to xdotool."
+  (let ((command (format "%s key --window %s %s" bin-path window key)))
+    (shell-command-to-string command)))
 
 ;; Should always remain at the end, just before "(provide 'ezbl)".
 (ezbl-command-init)
