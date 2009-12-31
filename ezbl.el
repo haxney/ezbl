@@ -40,6 +40,11 @@
   :group 'ezbl
   :type 'file)
 
+(defcustom ezbl-key-xdotool-path (or (executable-find "xdotool") "/usr/bin/xdotool")
+  "The location of the `xdotool' program."
+  :group 'ezbl
+  :type 'file)
+
 (defvar ezbl-inst-list nil
   "An alist of Uzbl instances and their pids.
 
@@ -1099,6 +1104,36 @@ process owning buffer."
         (insert string)
         (set-marker (process-mark proc) (point)))
       (if moving (goto-char (process-mark proc))))))
+
+(defun ezbl-chomp (str)
+  "Chomp leading and tailing whitespace from STR.
+
+Why doesn't Emacs have this built in?"
+  (let ((s (if (symbolp str) (symbol-name str) str)))
+    (save-excursion
+      ;; Make the [:space:] class match newline.
+      (with-syntax-table (copy-syntax-table)
+        (modify-syntax-entry ?\n " ")
+        (while (and
+                (not (null (string-match "^[[:space:]]" s)))
+                (> (length s) (string-match "^[[:space:]]" s)))
+          (setq s (replace-match "" t nil s))))
+      (while (and
+              (not (null (string-match "[[:space:]]$" s)))
+              (> (length s) (string-match "[[:space:]]$" s)))
+        (setq s (replace-match "" t nil s))))
+    s))
+
+(defun ezbl-key-xdotool-exec (cmd &rest args)
+  "Synchronously call \"xdotool\" and return its result.
+
+CMD is the command to supply to xdotool.
+
+ARGS is the remaining list of arguments to CMD."
+  (ezbl-chomp
+   (shell-command-to-string
+    (mapconcat 'identity
+               (append (list ezbl-key-xdotool-path cmd) args) " "))))
 
 ;; Should always remain at the end, just before "(provide 'ezbl)".
 (ezbl-command-init)
