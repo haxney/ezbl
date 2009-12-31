@@ -100,7 +100,187 @@ buffer names.")
 buffer names.")
 
 (defvar ezbl-commands
-  '(((name . "set")
+  '(((name . "back")
+     (format . "back")
+     (interactive . "U")
+     (key-binding . "C-c C-b")
+     (doc . "Move backwards in the browser history."))
+
+    ((name . "forward")
+     (format . "forward")
+     (interactive . "U")
+     (key-binding . "C-c C-f")
+     (doc . "Move forwards in the browser history."))
+
+    ((name . "scroll")
+     (format . "scroll <direction> <argument>")
+     (interactive . "U\nnScroll amount: ")
+     (key-binding . "C-c C-v")
+     (doc . "Scroll in DIRECTION by ARGUMENT.
+
+* argument can be `begin`, `end`, or an amount given in pixels or
+  as a percentage of the size of the view.
+
+* set the amount to 100% to scroll a whole page"))
+
+    ((name . "reload")
+     (format . "reload")
+     (interactive . "U")
+     (key-binding . "C-c C-r")
+     (doc . "Reload the current page."))
+
+    ((name . "reload_ign_cache")
+     (format . "reload_ign_cache")
+     (interactive . "U")
+     (doc . "Reload the current page, clearing the cache."))
+
+    ((name . "stop")
+     (format . "stop")
+     (interactive . "U")
+     (key-binding . "C-c C-g")
+     (doc . "Stop the currently loading page."))
+
+    ((name . "zoom_in")
+     (format . "zoom_in")
+     (interactive . "U")
+     (key-binding . "C-c z i")
+     (doc . "Increase the zoom level."))
+
+    ((name . "zoom_out")
+     (format . "zoom_out")
+     (interactive . "U")
+     (key-binding . "C-c z o")
+     (doc . "Decrease the zoom level."))
+
+    ((name . "toggle_zoom_type")
+     (format . "toggle_zoom_type")
+     (interactive)
+     (doc . "Toggles the variable 'zoom_type' between
+'full-content' and 'text-only' zoom. In 'text-only' zoom, only
+the text of the page is zoomed, while in 'full-content' zoom,
+images and other page elements are zoomed along with the text."))
+
+    ((name . "uri")
+     (format . "uri <address>")
+     (interactive . "U\nsAddress: ")
+     (key-binding . "C-c C-o")
+     (doc . "Visit the Uri ADDRESS"))
+
+    ((name . "js")
+     (format . "js <body>")
+     (interactive . "U\nsJavascript to execute: ")
+     (doc . "Execute JavaScript within the browser.
+
+* execute the javascript in BODY.
+* remember that the commands must not contain line breaks."))
+
+    ((name . "script")
+     (format . "script <file>")
+     (interactive . "U\nfJavascript file to execute: ")
+     (key-binding . "C-c C-j")
+     (doc . "execute the JavaScript in FILE."))
+
+    ((name . "toggle_status")
+     (format . "toggle_status")
+     (interactive . "U")
+     (doc . "Toggle the display of the status bar."))
+
+    ((name . "spawn")
+     (format . "spawn <executable> <additonal_args>")
+     (interactive . "U\nFFile to spawn\nsAdditional arguments:")
+     (doc . "Runs a command.
+
+* See the \"external scripts\" section of the Uzbl readme for
+  details.
+
+* PATH is searched so giving the full path to commands is not
+  necessary.
+
+* note that the arguments as specified in \"external scripts\"
+  are appended at the end, so the argument numbers will be
+  higher."))
+
+    ((name . "sync_spawn")
+     (format . "sync_spawn <executable> <additional_args>")
+     (interactive . "U\nFFile to spawn\nsAdditional arguments:")
+     (doc . "Tell Uzbl to synchronously spawn a command.
+
+See `ezbl-command-spawn' for details.
+
+* these are synchronous variants of spawn and sh, which means
+  uzbl will wait for them to return.
+
+* you should only need to use these manually if you want to use a
+  chain command in a handler that wants output from the command
+  it runs"))
+
+    ((name . "sh")
+     (format . "sh <command>")
+     (interactive . "U\nsCommand to execute: ")
+     (doc . "Run a shell command.
+
+* runs a shell command by expanding %s in the shell_cmd variable
+  with the specified command; primarily useful as a shortcut for
+  \"spawn sh -c BODY\"
+
+* note that the arguments as specified in \"external scripts\"
+  are appended at the end, so the argument numbers will be
+  higher."))
+
+    ((name . "sync_sh")
+     (format . "sync_sh <command>")
+     (interactive . "U\nsCommand to run: ")
+     (doc . "Tell Uzbl to synchronously run a shell command.
+
+See `ezbl-command-sh' for details.
+
+* these are synchronous variants of spawn and sh, which means
+  uzbl will wait for them to return.
+
+* you should only need to use these manually if you want to use a
+  chain command in a handler that wants output from the command
+  it runs"))
+
+    ((name . "talk_to_socket")
+     (format . "talk_to_socket <socketfile> <args>")
+     (doc . "Lets uzbl talk to a socketfile."))
+
+    ((name . "exit")
+     (format . "exit")
+     (interactive . "U")
+     (key-binding . "C-c C-q")
+     (doc . "Close this instance of Uzbl."))
+
+    ((name . "search")
+     (format . "search <string>")
+     (interactive . "U\nsSearch: ")
+     (key-binding . "C-s")
+     (doc . "Search for STRING within the content of the current
+Uzbl page.
+
+* search with no string will search for the next/previous
+  occurrence of the string previously searched for."))
+
+    ((name . "search_reverse")
+     (format . "search_reverse <string>")
+     (interactive . "U\nsSearch backward: ")
+     (key-binding . "C-r")
+     (doc . "Search backwards for STRING in the current page.
+
+* search with no string will search for the next/previous
+  occurrence of the string previously searched for."))
+
+    ((name . "search_clear")
+     (format . "search_clear")
+     (interactive . "U")
+     (doc . "Unmark and clear the search string"))
+
+    ((name . "dehilight")
+     (format . "dehilight")
+     (interactive)
+     (doc . "Remove highlighting of search matches."))
+
+    ((name . "set")
      (format . "set <key> = <value>")
      (interactive . (let* ((var-name (completing-read "Variable to set: "
                                                       (mapcar '(lambda (item)
@@ -123,222 +303,6 @@ buffer names.")
 * if you want to unset a string, use `set' with one space as the
   value."))
 
-    ((name . "print")
-     (format . "print <key>")
-     (doc . "Print the value of KEY.
-
-If KEY contains a string of the form '@var', the value of the Uzl
-variable 'var' is printed.
-
-* use this to print the value of a variable."))
-    ((name . "bind")
-     (format . "bind <string> = <command>")
-     (interactive . "U\nsKey sequence: \nsCommand: ")
-     (doc . "Sets the character sequence STRING to invoke COMMAND
-     when typed interactively in Uzbl.
-
-* there are a few tricks you can do:
-
-  - STRING ends with an underscore: the command will only be
-    invoked after pressing return/enter. If the user enters text
-    where STRING has the underscore, %s in the COMMAND string
-    will be replaced by this text. (optional)
-
-  - STRING ends with an asterisk: similar behavior as with an
-    underscore, but also makes the binding incremental (i.e. the
-    command will be invoked on every keystroke).
-
-  - STRING ends on a different character: you need to type the
-    full string, which will trigger the command immediately,
-    without pressing enter/return.
-
-* examples:
-  - bind o _ = uri %s
-                + uzbl will load the url when you type: 'o '
-  - bind /* = search %s
-
-    + a search command which is called on every character typed
-      after the slash, letting you see the search narrow down
-      while typing.
-
-    + Hitting return, enter or esc will terminate the search.
-
-  - bind ZZ = exit
-
-    + When you type ZZ and nothing else, the exit command will be
-      triggered immediately."))
-    ((name . "back")
-     (format . "back")
-     (interactive . "U")
-     (key-binding . "C-c C-b")
-     (doc . "Move backwards in the browser history."))
-    ((name . "forward")
-     (format . "forward")
-     (interactive . "U")
-     (key-binding . "C-c C-f")
-     (doc . "Move forwards in the browser history."))
-    ((name . "scroll_vert")
-     (format . "scroll_vert <amount>")
-     (interactive . "U\nnScroll amount: ")
-     (key-binding . "C-c C-v")
-     (doc . "Scroll vertically by AMOUNT.
-
-AMOUNT is specified either in pixels, with a 'px' ending (55px)
-or percentage (55%).
-
-* amount is given in pixels(?) or as a percentage of the size of
-  the view
-
-* set amount to 100% to scroll a whole page."))
-    ((name . "scroll_horz")
-     (format . "scroll_horz <amount>")
-     (interactive . "U\nnScroll amount: ")
-     (key-binding . "M-v")
-     (doc . "Scroll horizontally by AMOUNT.
-
-AMOUNT is specified either in pixels, with a 'px' ending (55px)
-or percentage (55%).
-
-* amount is given in pixels(?) or as a percentage of the size of
-  the view
-
-* set amount to 100% to scroll a whole page"))
-    ((name . "scroll_begin")
-     (format . "scroll_begin")
-     (interactive . "U")
-     (key-binding . "C-a")
-     (doc . "Scroll to the beginning of the page."))
-    ((name . "scroll_end")
-     (format . "scroll_end")
-     (interactive . "U")
-     (key-binding . "C-e")
-     (doc . "Scroll to the end of the page."))
-    ((name . "reload")
-     (format . "reload")
-     (interactive . "U")
-     (key-binding . "C-c C-r")
-     (doc . "Reload the current page."))
-    ((name . "reload_ign_cache")
-     (format . "reload_ign_cache")
-     (interactive . "U")
-     (doc . "Reload the current page, clearing the cache."))
-    ((name . "stop")
-     (format . "stop")
-     (interactive . "U")
-     (key-binding . "C-c C-g")
-     (doc . "Stop the currently loading page."))
-    ((name . "zoom_in")
-     (format . "zoom_in")
-     (interactive . "U")
-     (key-binding . "C-c z i")
-     (doc . "Increase the zoom level."))
-    ((name . "zoom_out")
-     (format . "zoom_out")
-     (interactive . "U")
-     (key-binding . "C-c z o")
-     (doc . "Decrease the zoom level."))
-    ((name . "uri")
-     (format . "uri <address>")
-     (interactive . "U\nsAddress: ")
-     (key-binding . "C-c C-o")
-     (doc . "Visit the Uri ADDRESS"))
-    ((name . "js")
-     (format . "js <body>")
-     (interactive . "U\nsJavascript to execute: ")
-     (doc . "Execute JavaScript within the browser.
-
-* execute the javascript in BODY.
-* remember that the commands must not contain line breaks."))
-    ((name . "script")
-     (format . "script <file>")
-     (interactive . "U\nfJavascript file to execute: ")
-     (key-binding . "C-c C-j")
-     (doc . "execute the JavaScript in FILE."))
-    ((name . "toggle_status")
-     (format . "toggle_status")
-     (interactive . "U")
-     (doc . ""))
-    ((name . "spawn")
-     (format . "spawn <executable> <additonal_args>")
-     (interactive . "U\nFFile to spawn\nsAdditional arguments:")
-     (doc . "Runs a command.
-
-* See the \"external scripts\" section of the Uzbl readme for
-  details.
-
-* PATH is searched so giving the full path to commands is not
-  necessary.
-
-* note that the arguments as specified in \"external scripts\"
-  are appended at the end, so the argument numbers will be
-  higher."))
-    ((name . "sh")
-     (format . "sh <command>")
-     (interactive . "U\nsCommand to execute: ")
-     (doc . "Run a shell command.
-
-* runs a shell command by expanding %s in the shell_cmd variable
-  with the specified command; primarily useful as a shortcut for
-  \"spawn sh -c BODY\"
-
-* note that the arguments as specified in \"external scripts\"
-  are appended at the end, so the argument numbers will be
-  higher."))
-    ((name . "sync_spawn")
-     (format . "sync_spawn <executable> <additional_args>")
-     (interactive . "U\nFFile to spawn\nsAdditional arguments:")
-     (doc . "Tell Uzbl to synchronously spawn a command.
-
-See `ezbl-command-spawn' for details.
-
-* these are synchronous variants of spawn and sh, which means
-  uzbl will wait for them to return.
-
-* you should only need to use these manually if you want to use a
-  chain command in a handler that wants output from the command
-  it runs"))
-    ((name . "sync_sh")
-     (format . "sync_sh <command>")
-     (interactive . "U\nsCommand to run: ")
-     (doc . "Tell Uzbl to synchronously run a shell command.
-
-See `ezbl-command-sh' for details.
-
-* these are synchronous variants of spawn and sh, which means
-  uzbl will wait for them to return.
-
-* you should only need to use these manually if you want to use a
-  chain command in a handler that wants output from the command
-  it runs"))
-    ((name . "exit")
-     (format . "exit")
-     (interactive . "U")
-     (key-binding . "C-c C-q")
-     (doc . "Close this instance of Uzbl."))
-    ((name . "search")
-     (format . "search <string>")
-     (interactive . "U\nsSearch: ")
-     (key-binding . "C-s")
-     (doc . "Search for STRING within the content of the current
-     Uzbl page.
-
-* search with no string will search for the next/previous
-  occurrence of the string previously searched for."))
-    ((name . "search_reverse")
-     (format . "search_reverse <string>")
-     (interactive . "U\nsSearch backward: ")
-     (key-binding . "C-r")
-     (doc . "Search backwards for STRING in the current page.
-
-* search with no string will search for the next/previous
-  occurrence of the string previously searched for."))
-    ((name . "toggle_insert_mode")
-     (format . "toggle_insert_mode <optional_state>")
-     (interactive . "U")
-     (doc . "Set the insert mode to OPTIONAL_STATE.
-
-If the optional state is 0, disable insert mode. If 1, enable
-insert mode."))
     ((name . "dump_config")
      (format . "dump_config")
      (doc . "Dump the current Uzbl configuration.
@@ -346,27 +310,12 @@ insert mode."))
 * dumps your current config (which may have been changed at
   runtime) to stdout, in a format you can use to pipe into uzbl
   again (or use as config file)"))
-    ((name . "keycmd")
-     (format . "keycmd <string>")
-     (interactive . "U\nsSet command buffer to: ")
-     (doc . "Set the interactive command buffer to STRING.
 
-If STRING is a valid binding, it will execute."))
-    ((name . "keycmd_nl")
-     (format . "keycmd_nl <string>")
-     (interactive . "U\nsSet command buffer to: ")
-     (doc . "Set the interactive command buffer to STRING and emulate pressing return.
+    ((name . "dump_config_as_events")
+     (format . "dump_config_as_events")
+     (doc . "Dump the current config as a series of
+'VARIABLE_SET' events, which can be handled by an event manager."))
 
-See `ezbl-command-keycmd'.
-
-`ezbl-command-keycmd_nl' is like `ezbl-command-keycmd', but it
-also emulates a press of return, causing bindings with a
-parameter to execute. For example, keycmd_nl o google.com would
-load the said url if you have a binding like \"bind o _ = uri %s\"."))
-    ((name . "keycmd_bs")
-     (format . "keycmd_bs")
-     (interactive . "U")
-     (doc . "Erase (backspace) one character from the command buffer."))
     ((name . "chain")
      (format . "chain <command> <command2>")
      (interactive . "U\nsCommand 1: \nsCommand 2: ")
@@ -378,7 +327,76 @@ load the said url if you have a binding like \"bind o _ = uri %s\"."))
 * If you use chain with a handler script which must return some
   output (such as a cookie handler -- uzbl will wait for and use
   its output), use 'sync_spawn' or 'sync_sh' instead of 'spawn'
-  or 'sh' in the command that should give the output.")))
+  or 'sh' in the command that should give the output."))
+
+    ((name . "print")
+     (format . "print <key>")
+     (doc . "Print the value of KEY.
+
+If KEY contains a string of the form '@var', the value of the Uzl
+variable 'var' is printed.
+
+* use this to print the value of a variable."))
+
+    ((name . "event")
+     (format . "event <name> <details>")
+     (interactive . "U")
+     (doc . "Send custom event.
+NAME is the event name and DETAILS is additional information to include."))
+
+    ((name . "request")
+     (format . "request <name> <details>")
+     (interactive . "U")
+     (doc . "Send custom request.
+Same idea as events, but to be processed by EM, not uzbl-core."))
+
+    ((name . "menu_add")
+     (format . "menu_add <label>  = <command>"))
+
+    ((name . "menu_link_add")
+     (format . "menu_link_add <label>  = <command>"))
+
+    ((name . "menu_image_add")
+     (format . "menu_image_add <label>  = <command>"))
+
+    ((name . "menu_editable_add")
+     (format . "menu_editable_add <label>  = <command>")
+     (doc . "add a new entry LABEL that will execute COMMAND to one
+of the right click context menus."))
+
+    ((name . "menu_separator")
+     (format . "menu_separator <label>"))
+
+    ((name . "menu_link_separator")
+     (format . "menu_link_separator <label>"))
+
+    ((name . "menu_image_separator")
+     (format . "menu_image_separator <label>"))
+
+    ((name . "menu_editable_separator")
+     (format . "menu_editable_separator <label>")
+     (doc . "Adds a separator line to one of the right click context menus."))
+
+    ((name . "menu_remove")
+     (format . "menu_remove <label>"))
+
+    ((name . "menu_link_remove")
+     (format . "menu_link_remove <label>"))
+
+    ((name . "menu_image_remove")
+     (format . "menu_image_remove <label>"))
+
+    ((name . "menu_editable_remove")
+     (format . "menu_editable_remove <label>")
+     (doc . "Removes the entry LABEL from one of the right click context menus."))
+
+    ((name . "hardcopy")
+     (format . "hardcopy")
+     (doc . "open print dialog"))
+
+    ((name . "include")
+     (format . "include <file>")
+     (doc . "read contents of file and interpret commands")))
   "A list of commands which Uzbl accepts. These are used to
 generate the functions to call each command.
 
@@ -393,7 +411,7 @@ The following attributes can be used in each alist:
 
   The format of the command, for example
 
-    scroll_vert <amount>
+    scroll <direction> <amount>
 
 - interactive (optional)
 
@@ -415,45 +433,40 @@ All variables must be enclosed in angle brackets.")
 (defvar ezbl-variables
   '((uri . "(callback: load the uri)")
     (verbose . "affects output on stdout")
-    (mode . "insert or command mode")
     (inject_html . "base_url: used when passing html through stdin")
-    (html_endmarker . "delimiter when passing html through stdin")
-    (html_mode_timeout . "consider end of html input after x seconds when no endmarker found")
-    (keycmd . "holds the input buffer (callback: update input buffer)")
-    (status_message . "(callback: update title)")
+    (geometry . "Geometry and position of the Uzbl window. Format is \"<width>x<height>+<x-offset>+<y-offset>\".")
+    (keycmd . "Holds the input buffer (callback: update input buffer)")
     (show_status . "show statusbar or not")
     (status_top . "statusbar on top?")
     (status_format . "marked up, to be expanded string for statusbar (callback: update statusbar)")
-    (status_pbar_done . "character to denote done % of pageload")
-    (status_pbar_pending . "character to denote pending % of pageload")
-    (status_pbar_width . "width of progressbar")
     (status_background . "color which can be used to override Gtk theme.")
-    (insert_indicator . "string to denote insert mode")
-    (command_indicator . "string to denote command mode")
     (title_format_long . "titlebar string when no statusbar shown (will be expanded")
     (title_format_short . "titlebar string when statusbar shown (will be expanded)")
     (icon . "path to icon for Gtk")
-    (insert_mode . "whether insert mode is active")
-    (always_insert_mode . "set this to true if you don't like modal (vim-like) interfaces")
-    (reset_command_mode . "automatically revert to command mode on pageload (unless alwaysinsertmode is set)")
-    (modkey . "modkey which can be pressed to activate keybind from inside insert mode")
-    (load_finish_handler)
-    (load_start_handler)
-    (load_commit_handler)
-    (history_handler)
-    (download_handler)
-    (cookie_handler)
+    (forward_keys . "whether uzbl-core should send key events to the webkit view")
+    (download_handler . "The command to call (usually a shell script) when the page requests a download")
+    (cookie_handler . "The command to call to handle cookies.")
     (new_window . "handler to execute to invoke new uzbl window (TODO better name)")
+    (scheme_handler . "handler to execute for each URI navigated
+to - the navigation request will be ignored if handler prints USED.")
     (fifo_dir . "location to store fifo's")
     (socket_dir . "location to store sockets")
     (http_debug . "http debug mode (value 0-3)")
     (shell_cmd . "alias which will be expanded to use shell commands (eg sh -c)")
-    (proxy_url . "http traffic socks proxy (eg: http://:)")
-    (max_conns)
-    (max_conns_host)
-    (useragent . "to be expanded strin")
-    (zoom_level)
-    (font_size)
+    (proxy_url . "http traffic socks proxy (eg: http://<host>:<port>)")
+    (max_conns . "max simultaneous connections (default: 100)")
+    (max_conns_host . "max simultaneous connections per hostname (default: 6)")
+    (view_source . "View the page source.")
+    (useragent . "to be expanded string")
+    (zoom_level . "The level of zoom of the page.")
+    (zoom_type)
+    (font_size . "The current font size.")
+    (default_font_family . "sans-serif")
+    (monospace_font_family . "monospace (example Aerial Mono)")
+    (cursive_font_family . "sans")
+    (sans_serif_font_family . "sans (example DejaVu Sans)")
+    (serif_font_family . "serif (example DejaVu Serif)")
+    (fantasy_font_family . "Pterra")
     (monospace_size)
     (minimum_font_size)
     (disable_plugins . "(TODO rename to enable)")
@@ -467,7 +480,7 @@ All variables must be enclosed in angle brackets.")
     (resizable_text_areas)
     (default_encoding . "iso-8859-1 by default")
     (enforce_96_dpi . "1 by default")
-    (caret_browsing . ""))
+    (caret_browsing))
   "The variables available from Uzbl.")
 
 (defvar ezbl-xwidget-id-counter 0
@@ -706,7 +719,7 @@ Returns an `ezbl-inst'."
     (if (ezbl-inst-p instance)
         instance
       (when strict
-          (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))))))
+        (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))))))
 
 (defun ezbl-inst-define-advice ()
   "Define and activate the advice for each slot in `ezbl-inst'.
