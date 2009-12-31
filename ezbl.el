@@ -102,39 +102,7 @@ buffer names.")
 buffer names.")
 
 (defvar ezbl-commands
-  '(((name . "set")
-     (format . "set <key> = <value>")
-     (interactive . (let* ((var-name (completing-read "Variable to set: "
-                                                      (mapcar '(lambda (item)
-                                                                 (symbol-name (car item))) ezbl-variables)
-                                                      nil ;; predicate
-                                                      t   ;; require-match
-                                                      nil ;; initial-input
-                                                      'ezbl-command-set-history)) ;; hist
-                           (default (ezbl-variable-get nil var-name))
-                           (new-val (read-string (format "New value (%s): " default) nil nil default)))
-                      (list nil var-name new-val)))
-     (key-binding . "C-c C-s")
-     (doc . "Used for changing variables on the fly. Sets KEY
-     equal to VALUE.
-
-* the changes are effective immediately; for example, setting the
-  variable uri will make uzbl start loading, and changing
-  status_format will make the status bar react immediately
-
-* if you want to unset a string, use `set' with one space as the
-  value."))
-
-    ((name . "print")
-     (format . "print <key>")
-     (doc . "Print the value of KEY.
-
-If KEY contains a string of the form '@var', the value of the Uzl
-variable 'var' is printed.
-
-* use this to print the value of a variable."))
-
-    ((name . "back")
+  '(((name . "back")
      (format . "back")
      (interactive . "U")
      (key-binding . "C-c C-b")
@@ -186,6 +154,14 @@ variable 'var' is printed.
      (key-binding . "C-c z o")
      (doc . "Decrease the zoom level."))
 
+    ((name . "toggle_zoom_type")
+     (format . "toggle_zoom_type")
+     (interactive)
+     (doc . "Toggles the variable 'zoom_type' between
+'full-content' and 'text-only' zoom. In 'text-only' zoom, only
+the text of the page is zoomed, while in 'full-content' zoom,
+images and other page elements are zoomed along with the text."))
+
     ((name . "uri")
      (format . "uri <address>")
      (interactive . "U\nsAddress: ")
@@ -209,7 +185,7 @@ variable 'var' is printed.
     ((name . "toggle_status")
      (format . "toggle_status")
      (interactive . "U")
-     (doc . ""))
+     (doc . "Toggle the display of the status bar."))
 
     ((name . "spawn")
      (format . "spawn <executable> <additonal_args>")
@@ -221,19 +197,6 @@ variable 'var' is printed.
 
 * PATH is searched so giving the full path to commands is not
   necessary.
-
-* note that the arguments as specified in \"external scripts\"
-  are appended at the end, so the argument numbers will be
-  higher."))
-
-    ((name . "sh")
-     (format . "sh <command>")
-     (interactive . "U\nsCommand to execute: ")
-     (doc . "Run a shell command.
-
-* runs a shell command by expanding %s in the shell_cmd variable
-  with the specified command; primarily useful as a shortcut for
-  \"spawn sh -c BODY\"
 
 * note that the arguments as specified in \"external scripts\"
   are appended at the end, so the argument numbers will be
@@ -252,6 +215,19 @@ See `ezbl-command-spawn' for details.
 * you should only need to use these manually if you want to use a
   chain command in a handler that wants output from the command
   it runs"))
+
+    ((name . "sh")
+     (format . "sh <command>")
+     (interactive . "U\nsCommand to execute: ")
+     (doc . "Run a shell command.
+
+* runs a shell command by expanding %s in the shell_cmd variable
+  with the specified command; primarily useful as a shortcut for
+  \"spawn sh -c BODY\"
+
+* note that the arguments as specified in \"external scripts\"
+  are appended at the end, so the argument numbers will be
+  higher."))
 
     ((name . "sync_sh")
      (format . "sync_sh <command>")
@@ -295,18 +271,39 @@ Uzbl page.
 
 * search with no string will search for the next/previous
   occurrence of the string previously searched for."))
+
     ((name . "search_clear")
      (format . "search_clear")
      (interactive . "U")
      (doc . "Unmark and clear the search string"))
 
-    ((name . "toggle_insert_mode")
-     (format . "toggle_insert_mode <optional_state>")
-     (interactive . "U")
-     (doc . "Set the insert mode to OPTIONAL_STATE.
+    ((name . "dehilight")
+     (format . "dehilight")
+     (interactive)
+     (doc . "Remove highlighting of search matches."))
 
-If the optional state is 0, disable insert mode. If 1, enable
-insert mode."))
+    ((name . "set")
+     (format . "set <key> = <value>")
+     (interactive . (let* ((var-name (completing-read "Variable to set: "
+                                                      (mapcar '(lambda (item)
+                                                                 (symbol-name (car item))) ezbl-variables)
+                                                      nil ;; predicate
+                                                      t   ;; require-match
+                                                      nil ;; initial-input
+                                                      'ezbl-command-set-history)) ;; hist
+                           (default (ezbl-variable-get nil var-name))
+                           (new-val (read-string (format "New value (%s): " default) nil nil default)))
+                      (list nil var-name new-val)))
+     (key-binding . "C-c C-s")
+     (doc . "Used for changing variables on the fly. Sets KEY
+     equal to VALUE.
+
+* the changes are effective immediately; for example, setting the
+  variable uri will make uzbl start loading, and changing
+  status_format will make the status bar react immediately
+
+* if you want to unset a string, use `set' with one space as the
+  value."))
 
     ((name . "dump_config")
      (format . "dump_config")
@@ -316,28 +313,10 @@ insert mode."))
   runtime) to stdout, in a format you can use to pipe into uzbl
   again (or use as config file)"))
 
-    ((name . "keycmd")
-     (format . "keycmd <string>")
-     (interactive . "U\nsSet command buffer to: ")
-     (doc . "Set the interactive command buffer to STRING.
-
-If STRING is a valid binding, it will execute."))
-    ((name . "keycmd_nl")
-     (format . "keycmd_nl <string>")
-     (interactive . "U\nsSet command buffer to: ")
-     (doc . "Set the interactive command buffer to STRING and emulate pressing return.
-
-See `ezbl-command-keycmd'.
-
-`ezbl-command-keycmd_nl' is like `ezbl-command-keycmd', but it
-also emulates a press of return, causing bindings with a
-parameter to execute. For example, keycmd_nl o google.com would
-load the said url if you have a binding like \"bind o _ = uri %s\"."))
-
-    ((name . "keycmd_bs")
-     (format . "keycmd_bs")
-     (interactive . "U")
-     (doc . "Erase (backspace) one character from the command buffer."))
+    ((name . "dump_config_as_events")
+     (format . "dump_config_as_events")
+     (doc . "Dump the current config as a series of
+'VARIABLE_SET' events, which can be handled by an event manager."))
 
     ((name . "chain")
      (format . "chain <command> <command2>")
@@ -351,6 +330,15 @@ load the said url if you have a binding like \"bind o _ = uri %s\"."))
   output (such as a cookie handler -- uzbl will wait for and use
   its output), use 'sync_spawn' or 'sync_sh' instead of 'spawn'
   or 'sh' in the command that should give the output."))
+
+    ((name . "print")
+     (format . "print <key>")
+     (doc . "Print the value of KEY.
+
+If KEY contains a string of the form '@var', the value of the Uzl
+variable 'var' is printed.
+
+* use this to print the value of a variable."))
 
     ((name . "event")
      (format . "event <name> <details>")
@@ -470,8 +458,8 @@ to - the navigation request will be ignored if handler prints USED.")
     (proxy_url . "http traffic socks proxy (eg: http://<host>:<port>)")
     (max_conns . "max simultaneous connections (default: 100)")
     (max_conns_host . "max simultaneous connections per hostname (default: 6)")
-    (useragent . "to be expanded string")
     (view_source . "View the page source.")
+    (useragent . "to be expanded string")
     (zoom_level . "The level of zoom of the page.")
     (zoom_type)
     (font_size . "The current font size.")
