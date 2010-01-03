@@ -16,10 +16,15 @@
 ;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
 ;; USA.
 
-;;; Commentary:
+;;; Requirements:
 ;;
-;;  Uzbl version 2009.11.30 or greater is required. Ezbl will not work with
-;;  older versions.
+;; Ezbl needs the following external programs to function. Lower versions are
+;; known not to work.
+;;
+;; - Uzbl (http://uzbl.org) version 2009.11.30
+;; - xdotool (http://semicomplete.com/projects/xdotool) version 20090710
+
+;;; Commentary:
 ;;
 ;;  Run `ezbl-open' to start a Uzbl instance and browse to a URL. Also, check
 ;;  `ezbl-mode' for a listing of the key bindings of Ezbl.
