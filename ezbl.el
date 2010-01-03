@@ -466,13 +466,15 @@ All variables must be enclosed in angle brackets.")
      (doc . "path to icon for Gtk"))
 
     ((name . "forward_keys")
-     (doc . "whether uzbl-core should send key events to the webkit view"))
+     (doc . "whether uzbl-core should send key events to the webkit view")
+     (default . "1"))
 
     ((name . "download_handler")
      (doc . "The command to call (usually a shell script) when the page requests a download"))
 
     ((name . "cookie_handler")
-     (doc . "The command to call to handle cookies."))
+     (doc . "The command to call to handle cookies.")
+     (default . (eval (format "talk_to_socket %s" ezbl-cookie-socket))))
 
     ((name . "new_window")
      (doc . "handler to execute to invoke new uzbl window (TODO better name)"))
@@ -588,7 +590,18 @@ This is a list of alists, where each alist has the attributes:
 - doc (mandatory)
 
   A description of the variable. Usually taken straight from the
-  Uzbl README.")
+  Uzbl README.
+
+- default (optional)
+
+  An optional default value for the variable. Note that this is
+  not the same as Uzbl's default values; values here will
+  overwrite Uzbl defaults.
+
+  Either a string to be sent to Uzbl or a list of the form (eval
+  FORM), where FORM is a Lisp expression, evaluated after each
+  Uzbl instance is started, which returns a string to use as the
+  default value.")
 
 (defvar ezbl-xwidget-id-counter 0
   "Keeps track of the current value to assign to newly-created xwidgets.
