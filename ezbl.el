@@ -1121,6 +1121,7 @@ to VALUE and runs `ezbl-update-mode-line-format'."
                (when binding
                  (define-key map (read-kbd-macro binding) func))))
           ezbl-commands)
+    (define-key map (vector 'remap 'self-insert-command) 'ezbl-self-insert-command)
     map)
   "Keymap for `ezbl-mode'.")
 
@@ -1263,6 +1264,15 @@ KEY: The key code to send.
                          (ezbl-inst-xwin inst)
                          key)))
     (shell-command-to-string command)))
+
+(defun ezbl-self-insert-command (n)
+  "Handle character presses in display buffers.
+
+Character presses use `ezbl-key-press' to pass the character to
+the underlying Uzbl window."
+  (interactive "p")
+  (let ((char (char-to-string last-command-event)))
+    (ezbl-key-press nil char)))
 
 ;; Should always remain at the end, just before "(provide 'ezbl)".
 (ezbl-command-init)
