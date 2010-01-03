@@ -77,6 +77,7 @@ should only be set by `ezbl-init'.")
   '(args
     process
     pid
+    xwin
     output-buffer
     display-buffer
     vars)
@@ -1215,7 +1216,8 @@ INST is resolvable to an ezbl instance."
    ;; ((eq event 'FORM_ACTIVE))
    ;; ((eq event 'ROOT_ACTIVE))
    ;; ((eq event 'FILE_INCLUDED))
-   ((eq event 'PLUG_CREATED))
+   ((eq event 'PLUG_CREATED)
+    (setf (ezbl-inst-xwin inst) detail))
    ((eq event 'BUILTINS))
    (t
     (ezbl-process-append inst (format "EVENT [%s] %s %s\n" app-name event detail)))))
