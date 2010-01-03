@@ -511,7 +511,8 @@ to - the navigation request will be ignored if handler prints USED."))
     ((name . "zoom_level")
      (doc . "The level of zoom of the page."))
 
-    ((name . "zoom_type"))
+    ((name . "zoom_type")
+     (doc . "The type of zoom."))
 
     ((name . "font_size")
      (doc . "The current font size."))
