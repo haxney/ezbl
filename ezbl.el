@@ -73,16 +73,6 @@ processes.")
   "Keeps track of whether or not Ezbl has been initialized. This
 should only be set by `ezbl-init'.")
 
-
-(defstruct ezbl-inst
-  "A structure containing the properties of an Ezbl instance."
-  args
-  process
-  pid
-  output-buffer
-  display-buffer
-  vars)
-
 (defconst ezbl-inst-slots
   '(args
     process
@@ -90,7 +80,14 @@ should only be set by `ezbl-init'.")
     output-buffer
     display-buffer
     vars)
-  "A list of the slot names in the `ezbl-inst' structure.")
+  "A list of the slot names in the `ezbl-inst' structure.
+
+`defstruct' does not keep a list of the fields of the struct for
+later use, so do this manually.")
+
+(eval `(defstruct ezbl-inst
+         "A structure containing the properties of an Ezbl instance."
+         ,@ezbl-inst-slots))
 
 (defconst ezbl-inst-get-first
   '(ezbl-inst-get-first
@@ -292,13 +289,14 @@ Uzbl page.
 
     ((name . "set")
      (format . "set <key> = <value>")
-     (interactive . (let* ((var-name (completing-read "Variable to set: "
-                                                      (mapcar '(lambda (item)
-                                                                 (symbol-name (car item))) ezbl-variables)
-                                                      nil ;; predicate
-                                                      t   ;; require-match
-                                                      nil ;; initial-input
-                                                      'ezbl-command-set-history)) ;; hist
+     (interactive . (let* ((var-name
+                            (completing-read "Variable to set: "
+                                             (mapcar '(lambda (item)
+                                                        (cdr-safe (assq 'name item))) ezbl-variables)
+                                             nil ;; predicate
+                                             t   ;; require-match
+                                             nil ;; initial-input
+                                             'ezbl-command-set-history)) ;; hist
                            (default (ezbl-variable-get nil var-name))
                            (new-val (read-string (format "New value (%s): " default) nil nil default)))
                       (list nil var-name new-val)))
@@ -441,57 +439,179 @@ The following attributes can be used in each alist:
 All variables must be enclosed in angle brackets.")
 
 (defvar ezbl-variables
-  '((uri . "(callback: load the uri)")
-    (verbose . "affects output on stdout")
-    (inject_html . "base_url: used when passing html through stdin")
-    (geometry . "Geometry and position of the Uzbl window. Format is \"<width>x<height>+<x-offset>+<y-offset>\".")
-    (keycmd . "Holds the input buffer (callback: update input buffer)")
-    (show_status . "show statusbar or not")
-    (status_top . "statusbar on top?")
-    (status_format . "marked up, to be expanded string for statusbar (callback: update statusbar)")
-    (status_background . "color which can be used to override Gtk theme.")
-    (title_format_long . "titlebar string when no statusbar shown (will be expanded")
-    (title_format_short . "titlebar string when statusbar shown (will be expanded)")
-    (icon . "path to icon for Gtk")
-    (forward_keys . "whether uzbl-core should send key events to the webkit view")
-    (download_handler . "The command to call (usually a shell script) when the page requests a download")
-    (cookie_handler . "The command to call to handle cookies.")
-    (new_window . "handler to execute to invoke new uzbl window (TODO better name)")
-    (scheme_handler . "handler to execute for each URI navigated
-to - the navigation request will be ignored if handler prints USED.")
-    (fifo_dir . "location to store fifo's")
-    (socket_dir . "location to store sockets")
-    (http_debug . "http debug mode (value 0-3)")
-    (shell_cmd . "alias which will be expanded to use shell commands (eg sh -c)")
-    (proxy_url . "http traffic socks proxy (eg: http://<host>:<port>)")
-    (max_conns . "max simultaneous connections (default: 100)")
-    (max_conns_host . "max simultaneous connections per hostname (default: 6)")
-    (view_source . "View the page source.")
-    (useragent . "to be expanded string")
-    (zoom_level . "The level of zoom of the page.")
-    (zoom_type)
-    (font_size . "The current font size.")
-    (default_font_family . "sans-serif")
-    (monospace_font_family . "monospace (example Aerial Mono)")
-    (cursive_font_family . "sans")
-    (sans_serif_font_family . "sans (example DejaVu Sans)")
-    (serif_font_family . "serif (example DejaVu Serif)")
-    (fantasy_font_family . "Pterra")
-    (monospace_size)
-    (minimum_font_size)
-    (disable_plugins . "(TODO rename to enable)")
-    (disable_scripts . "(TODO rename to enable)")
-    (autoload_images)
-    (autoshrink_images . "shrink images to window size (default 0)")
-    (enable_spellcheck)
-    (enable_private)
-    (print_backgrounds . "print background images? (default 0)")
-    (stylesheet_uri . "use this to override the pagelayout with a custom stylesheet")
-    (resizable_text_areas)
-    (default_encoding . "iso-8859-1 by default")
-    (enforce_96_dpi . "1 by default")
-    (caret_browsing))
-  "The variables available from Uzbl.")
+  '(((name . "uri")
+     (doc . "(callback: load the uri)"))
+
+    ((name . "verbose")
+     (doc . "affects output on stdout"))
+
+    ((name . "inject_html")
+     (doc . "base_url: used when passing html through stdin"))
+
+    ((name . "geometry")
+     (doc . "Geometry and position of the Uzbl window. Format is \"<width>x<height>+<x-offset>+<y-offset>\"."))
+
+    ((name . "keycmd")
+     (doc . "Holds the input buffer (callback: update input buffer)"))
+
+    ((name . "show_status")
+     (doc . "show statusbar or not"))
+
+    ((name . "status_top")
+     (doc . "statusbar on top?"))
+
+    ((name . "status_format")
+     (doc . "marked up, to be expanded string for statusbar (callback: update statusbar)"))
+
+    ((name . "status_background")
+     (doc . "color which can be used to override Gtk theme."))
+
+    ((name . "title_format_long")
+     (doc . "titlebar string when no statusbar shown (will be expanded"))
+
+    ((name . "title_format_short")
+     (doc . "titlebar string when statusbar shown (will be expanded)"))
+
+    ((name . "icon")
+     (doc . "path to icon for Gtk"))
+
+    ((name . "forward_keys")
+     (doc . "whether uzbl-core should send key events to the webkit view")
+     (default . "1"))
+
+    ((name . "download_handler")
+     (doc . "The command to call (usually a shell script) when the page requests a download"))
+
+    ((name . "cookie_handler")
+     (doc . "The command to call to handle cookies.")
+     (default . (eval (format "talk_to_socket %s" ezbl-cookie-socket))))
+
+    ((name . "new_window")
+     (doc . "handler to execute to invoke new uzbl window (TODO better name)"))
+
+    ((name . "scheme_handler")
+     (doc . "handler to execute for each URI navigated
+to - the navigation request will be ignored if handler prints USED."))
+
+    ((name . "fifo_dir")
+     (doc . "location to store fifo's"))
+
+    ((name . "socket_dir")
+     (doc . "location to store sockets"))
+
+    ((name . "http_debug")
+     (doc . "http debug mode (value 0-3)"))
+
+    ((name . "shell_cmd")
+     (doc . "alias which will be expanded to use shell commands (eg sh -c)"))
+
+    ((name . "proxy_url")
+     (doc . "http traffic socks proxy (eg: http://<host>:<port>)"))
+
+    ((name . "max_conns")
+     (doc . "max simultaneous connections (default: 100)"))
+
+    ((name . "max_conns_host")
+     (doc . "max simultaneous connections per hostname (default: 6)"))
+
+    ((name . "view_source")
+     (doc . "View the page source."))
+
+    ((name . "useragent")
+     (doc . "to be expanded string"))
+
+    ((name . "zoom_level")
+     (doc . "The level of zoom of the page."))
+
+    ((name . "zoom_type")
+     (doc . "The type of zoom."))
+
+    ((name . "font_size")
+     (doc . "The current font size."))
+
+    ((name . "default_font_family")
+     (doc . "sans-serif"))
+
+    ((name . "monospace_font_family")
+     (doc . "monospace (example Aerial Mono)"))
+
+    ((name . "cursive_font_family")
+     (doc . "sans"))
+
+    ((name . "sans_serif_font_family")
+     (doc . "sans (example DejaVu Sans)"))
+
+    ((name . "serif_font_family")
+     (doc . "serif (example DejaVu Serif)"))
+
+    ((name . "fantasy_font_family")
+     (doc . "Pterra"))
+
+    ((name . "monospace_size")
+     (doc . "Default monospace font size."))
+
+    ((name . "minimum_font_size")
+     (doc . "The minimum font size."))
+
+    ((name . "disable_plugins")
+     (doc . "(TODO rename to enable)"))
+
+    ((name . "disable_scripts")
+     (doc . "(TODO rename to enable)"))
+
+    ((name . "autoload_images")
+     (doc . "Images are automatically loaded."))
+
+    ((name . "autoshrink_images")
+     (doc . "shrink images to window size (default 0)"))
+
+    ((name . "enable_spellcheck")
+     (doc . "Spellcheck is enabled."))
+
+    ((name . "enable_private")
+     (doc . "Private mode is enabled."))
+
+    ((name . "print_backgrounds")
+     (doc . "print background images? (default 0)"))
+
+    ((name . "stylesheet_uri")
+     (doc . "use this to override the pagelayout with a custom stylesheet"))
+
+    ((name . "resizable_text_areas")
+     (doc . "Are text areas resizable?"))
+
+    ((name . "default_encoding")
+     (doc . "iso-8859-1 by default"))
+
+    ((name . "enforce_96_dpi")
+     (doc . "1 by default"))
+
+    ((name . "caret_browsing")
+     (doc . "Whether to use caret browsing.")))
+  "The variables available from Uzbl.
+
+This is a list of alists, where each alist has the attributes:
+
+- name (mandatory)
+
+  The name of the variable. Must exactly match the name used by
+  Uzbl.
+
+- doc (mandatory)
+
+  A description of the variable. Usually taken straight from the
+  Uzbl README.
+
+- default (optional)
+
+  An optional default value for the variable. Note that this is
+  not the same as Uzbl's default values; values here will
+  overwrite Uzbl defaults.
+
+  Either a string to be sent to Uzbl or a list of the form (eval
+  FORM), where FORM is a Lisp expression, evaluated after each
+  Uzbl instance is started, which returns a string to use as the
+  default value.")
 
 (defvar ezbl-xwidget-id-counter 0
   "Keeps track of the current value to assign to newly-created xwidgets.
@@ -563,6 +683,17 @@ each one. Also, run through `ezbl-instance-spec' and call
 `ezbl-make-instance-accessor-func' on each one."
   (interactive)
   (append (mapcar 'ezbl-command-make-func ezbl-commands)))
+
+(defun ezbl-variable-set-defaults (&optional inst)
+  "Set the variable defaults according to `ezbl-variables'."
+  (mapc '(lambda (spec)
+           (let ((name (cdr (assq 'name spec)))
+                 (default (cdr-safe (assq 'default spec))))
+             (when default
+               (if (and (consp default) (eq (car default) 'eval))
+                   (setq default (eval (cadr default))))
+               (ezbl-command-set inst name default))))
+        ezbl-variables))
 
 (defun ezbl-init ()
   "Starts up the services needed for Ezbl to run."
@@ -934,12 +1065,6 @@ process and start a new one."
                                 :family 'local
                                 :filter 'ezbl-cookie-listener))))
 
-(defun ezbl-cookie-set-handler (&optional inst path)
-  "Set Ezbl instance INST's cookie_handler to
-`ezbl-cookie-socket' or PATH, if it's given."
-  (ezbl-command-set inst "cookie_handler"
-                    (format "talk_to_socket %s" (or path ezbl-cookie-socket))))
-
 (defun ezbl-update-mode-line-format ()
   "Updates the mode-line format in each ezbl display-window,
 
@@ -994,7 +1119,7 @@ to VALUE and runs `ezbl-update-mode-line-format'."
   (set-buffer-modified-p nil)
   (add-hook 'window-configuration-change-hook 'ezbl-fill-window nil t))
 
-(add-hook 'ezbl-mode-hook 'ezbl-cookie-set-handler)
+(add-hook 'ezbl-mode-hook 'ezbl-variable-set-defaults)
 (add-hook 'ezbl-mode-hook 'ezbl-fill-window)
 (add-hook 'ezbl-mode-hook 'ezbl-update-mode-line-format)
 
