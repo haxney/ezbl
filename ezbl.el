@@ -1237,15 +1237,18 @@ process owning buffer."
         (set-marker (process-mark proc) (point)))
       (if moving (goto-char (process-mark proc))))))
 
-(defun* ezbl-key-press (window key &key (bin-path ezbl-key-xdotool-path))
-  "Send a keypress to the Uzbl instance.
+(defun* ezbl-key-press (inst key &key (bin-path ezbl-key-xdotool-path))
+  "Send a keypress to the Uzbl instance INST.
 
-WINDOW: the X Window ID of the window to send the keypress.
+INST: The `ezbl-inst' to which to send the keypress.
 
 KEY: The key code to send.
 
 :bin-path Optionally override the global path to xdotool."
-  (let ((command (format "%s key --window %s %s" bin-path window key)))
+  (let ((command (format "%s key --window %s %s"
+                         bin-path
+                         (ezbl-inst-xwin inst)
+                         key)))
     (shell-command-to-string command)))
 
 ;; Should always remain at the end, just before "(provide 'ezbl)".
