@@ -674,6 +674,17 @@ each one. Also, run through `ezbl-instance-spec' and call
   (interactive)
   (append (mapcar 'ezbl-command-make-func ezbl-commands)))
 
+(defun ezbl-variable-set-defaults (&optional inst)
+  "Set the variable defaults according to `ezbl-variables'."
+  (mapc '(lambda (spec)
+           (let ((name (cdr (assq 'name spec)))
+                 (default (cdr-safe (assq 'default spec))))
+             (when default
+               (if (and (consp default) (eq (car default) 'eval))
+                   (setq default (eval (cadr default))))
+               (ezbl-command-set inst name default))))
+        ezbl-variables))
+
 (defun ezbl-init ()
   "Starts up the services needed for Ezbl to run."
   (unless ezbl-initialized
@@ -1044,12 +1055,6 @@ process and start a new one."
                                 :family 'local
                                 :filter 'ezbl-cookie-listener))))
 
-(defun ezbl-cookie-set-handler (&optional inst path)
-  "Set Ezbl instance INST's cookie_handler to
-`ezbl-cookie-socket' or PATH, if it's given."
-  (ezbl-command-set inst "cookie_handler"
-                    (format "talk_to_socket %s" (or path ezbl-cookie-socket))))
-
 (defun ezbl-update-mode-line-format ()
   "Updates the mode-line format in each ezbl display-window,
 
@@ -1104,7 +1109,7 @@ to VALUE and runs `ezbl-update-mode-line-format'."
   (set-buffer-modified-p nil)
   (add-hook 'window-configuration-change-hook 'ezbl-fill-window nil t))
 
-(add-hook 'ezbl-mode-hook 'ezbl-cookie-set-handler)
+(add-hook 'ezbl-mode-hook 'ezbl-variable-set-defaults)
 (add-hook 'ezbl-mode-hook 'ezbl-fill-window)
 (add-hook 'ezbl-mode-hook 'ezbl-update-mode-line-format)
 
