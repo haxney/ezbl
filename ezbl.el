@@ -857,12 +857,25 @@ Returns an `ezbl-inst'."
 
 Makes the accessors call `ezbl-inst-get' before operating, so
 that the accessors work on things which are resolvable to an
-`ezbl-inst', rather than only allowing the insts themselves."
+`ezbl-inst', rather than only allowing the insts themselves.
+
+Also redefines the `setf-method' for each slot, since `setf'
+doesn't actually call the slot accessor, so it wouldn't resolve
+its argument to an `ezbl-inst'."
   (mapc '(lambda (item)
            (let ((func (intern (concat "ezbl-inst-" (symbol-name item)))))
              (ad-add-advice func
                             ezbl-inst-get-first 'before 'first)
-             (ad-activate func)))
+             (ad-activate func)
+
+             ;; This is tricky. Redefines the `setf-method' to be the same as
+             ;; the old one, except that it is passed the result of
+             ;; `ezbl-inst-get' on the `eval'ed argument.
+             (eval (list 'define-setf-method
+                         func
+                         '(cl-x)
+                         `(apply ,(get func 'setf-method)
+                                 (list (ezbl-inst-get (eval cl-x) t)))))))
         ezbl-inst-slots))
 
 (defun ezbl-command-exec (inst command)
