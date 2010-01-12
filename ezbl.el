@@ -1265,12 +1265,17 @@ INST: The `ezbl-inst' to which to send the keypress.
 
 KEY: The key code to send.
 
-:bin-path Optionally override the global path to xdotool."
-  (let ((command (format "%s key --window %s %s"
-                         bin-path
-                         (ezbl-inst-xwin inst)
-                         key)))
-    (shell-command-to-string command)))
+:bin-path Optionally override the global path to xdotool.
+
+Returns `t' on success, or the result of the shell command (as a
+string) if there was a problem."
+  (let* ((command (format "%s key --window %s %s"
+                          bin-path
+                          (ezbl-inst-xwin inst)
+                          key))
+         (result (shell-command-to-string command)))
+    (or (= (length result) 0)
+        result)))
 
 (defun ezbl-self-insert-command (n)
   "Handle character presses in display buffers.
@@ -1278,8 +1283,9 @@ KEY: The key code to send.
 Character presses use `ezbl-key-press' to pass the character to
 the underlying Uzbl window."
   (interactive "p")
-  (let ((char (char-to-string last-command-event)))
-    (ezbl-key-press nil char)))
+  (let ((result (ezbl-key-press nil (ezbl-key-stringify last-command-event))))
+    (when (stringp result)
+      (error "Error calling xdotool: %s" result))))
 
 ;; Should always remain at the end, just before "(provide 'ezbl)".
 (ezbl-command-init)
