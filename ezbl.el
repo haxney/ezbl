@@ -30,7 +30,7 @@
 
 (defgroup ezbl nil "Settings for Ezbl, the Emacs frontend for Uzbl.")
 
-(defcustom ezbl-exec-path "/usr/bin/uzbl-core"
+(defcustom ezbl-exec-path (or (executable-find "uzbl-core") "/usr/bin/uzbl-core")
   "The location of the Uzbl executable."
   :group 'ezbl
   :type 'file)
