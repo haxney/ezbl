@@ -630,6 +630,26 @@ this type.")
 
 `xembed-ready' signal.")
 
+(defvar ezbl-key-exceptions '(("backspace" . "BackSpace")
+                              ("left" . "Left")
+                              ("right" . "Right")
+                              ("up" . "Up")
+                              ("down" . "Down"))
+  "Alist of Emacs key names to xdotool key names.
+
+Certain keys have different names in Emacs as in xdotool, such as
+backspace, which is \"backspace\" in Emacs and \"BackSpace\" in
+xdotool. This variable is an alist of Emacs names to xdotool
+names.")
+
+(defvar ezbl-key-passthrough '([backspace])
+  "List of keys to rebind to `ezbl-self-insert-command' in `ezbl-mode'.
+
+While the basic printing keys are successfully bound to
+`ezbl-self-insert-command' by remaping `self-insert-command',
+other keys, such as Backspace, are not. This is a list of extra
+keys to bind to `ezbl-self-insert-command'.")
+
 (defun ezbl-command-get-args (command)
   "Extracts the arguments (as symbols) from a Uzbl command specification.
 
