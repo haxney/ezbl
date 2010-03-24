@@ -1274,9 +1274,14 @@ process owning buffer."
 (defun ezbl-key-stringify (event)
   "Convert an Emacs keypress event to a string format which
 xdotool can use."
-  (let ((basic (event-basic-type event))
-        (mods (event-modifiers event)))
-    (concat (mapconcat 'symbol-name mods "+") "+" (char-to-string basic))))
+  (let* ((basic (event-basic-type event))
+         (basic-name (cond
+                      ((characterp basic)
+                       (char-to-string basic))
+                      ((symbolp basic)
+                       (symbol-name basic))))
+         (mods (event-modifiers event)))
+    (concat (mapconcat 'symbol-name mods "+") "+" basic-name)))
 
 (defun* ezbl-key-press (inst key &key (bin-path ezbl-key-xdotool-path))
   "Send a keypress to the Uzbl instance INST.
