@@ -777,7 +777,9 @@ Returns an `ezbl-inst' struct."
            ((eq keyword :socket)
             (setq program-args (append program-args (list "--socket") (list value))))
            ((eq keyword :display)
-            (setq program-args (append program-args (list "--display") (list value))))))))
+            (setq program-args (append program-args (list "--display") (list value))))
+           ((eq keyword :print-events)
+            (setq program-args (append program-args (list "--print-events"))))))))
 
     ;; Start process
     (let* (inst
@@ -990,7 +992,8 @@ xwidget's socket id."
      ((eq xwidget-event-type 'xembed-ready)
       (let* ((xembed-id (nth 3 last-input-event)))
         (ezbl-inst-start :socket (number-to-string xembed-id)
-                         :config "-") ;; Use stdin for config
+                         :config "-" ;; Use stdin for config
+                         :print-events t)
         (run-hooks 'ezbl-xembed-ready-hook))))))
 
 (defun ezbl-open (uri)
