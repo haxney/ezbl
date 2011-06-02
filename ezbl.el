@@ -706,80 +706,79 @@ each one. Also, run through `ezbl-instance-spec' and call
     (ezbl-inst-define-advice)
     (setq ezbl-initialized t)))
 
-(defun ezbl-inst-start (&rest args)
+(defun* ezbl-inst-start (&key uri
+                              verbose
+                              name
+                              config
+                              socket
+                              connect-socket
+                              print-events
+                              geometry
+                              version
+                              display
+                              help)
   "Start an instance of Uzbl. ARGS is a keyword list of
 options and values to pass to the Uzbl instance.
 
 The following keywords are used:
 
-:class VALUE
-        Program class as used by the window manager
-:gtk-name NAME
-        Program name as used by the window manager
-:screen SCREEN
-        X screen to use
-:sync nil
-        Make X calls synchronous. Must include `nil' as the argument.
-:gtk-module MODULES
-        Load additional GTK+ modules. MODULES should be a list of
-        string names of modules.
-:g-fatal-warnings nil
-        Make all warnings fatal. Must include `nil' as the argument.
 :uri URI
-        Uri to load at startup (equivalent to 'set uri = URI')
-:verbose nil
-        Whether to print all messages or just errors. Must
-        include `nil' as the argument.
+        URI to load at startup. Equivalent to `uzbl <uri>` or
+        `set uri = URI` after `uzbl` has launched.
+
+:verbose ANY-NON-NIL
+        Whether to print all messages or just errors. Value is
+        ignored as Uzbl does not accept a value for --verbose.
+
 :name NAME
-          Name of the current instance (defaults to Xorg window id)
+           Name of the current instance (defaults to Xorg window
+           id or random for GtkSocket mode).
+
 :config FILE
-        Config file (this is pretty much equivalent to 'uzbl < FILE' )
+        Path to config file or `-` for stdin.
+
 :socket SOCKET
-        Socket ID for GtkSocket.
+        Xembed socket ID.
+
+:connect-socket SOCKET
+        Connect to server socket for event managing.
+
+:print-events ANY-NON-NIL
+        Whether to print events to stdout.
+
+:geometry GEOMETRY
+        Set window geometry (format: \"WIDTHxHEIGHT+-X+-Y\" or \"maximized\").
+
 :display DISPLAY
         X display to use
 
+:help ANY-NON-NIL
+        Display help and exit.
+
 Returns an `ezbl-inst' struct."
   (let (program-args)
-    ;; Process keywords
-    (while args
-      (let ((arg (car args)))
-        (setq args (cdr args))
-        (unless (symbolp arg)
-          (error "Junk in args %S" args))
-        (let ((keyword arg)
-              (value (car args)))
-          (unless args
-            (error "Keyword %s is missing an argument" keyword))
-          (setq args (cdr args))
-          (cond
-           ((eq keyword :class)
-            (setq program-args (append program-args (list "--class") (list value))))
-           ((eq keyword :gtk-name)
-            (setq program-args (append program-args (list "--gtk-name") (list value))))
-           ((eq keyword :screen)
-            (setq program-args (append program-args (list "--screen") (list value))))
-           ((eq keyword :sync)
-            (setq program-args (append program-args (list "--sync"))))
-           ((eq keyword :gtk-module)
-            (setq program-args (append program-args (list "--gtk-module")
-                                       (list (mapconcat 'identity value ",")))))
-           ((eq keyword :g-fatal-warnings)
-            (setq program-args (append program-args (list "--g-fatal-warnings "))))
-           ((eq keyword :uri)
-            (setq program-args (append program-args (list "--uri") (list value))))
-           ((eq keyword :verbose)
-            (setq program-args (append program-args (list "--verbose"))))
-           ((eq keyword :name)
-            (setq program-args (append program-args (list "--name") (list value))))
-           ((eq keyword :config)
-            (setq program-args (append program-args (list "--config") (list value))))
-           ((eq keyword :socket)
-            (setq program-args (append program-args (list "--socket") (list value))))
-           ((eq keyword :display)
-            (setq program-args (append program-args (list "--display") (list value))))
-           ((eq keyword :print-events)
-            (setq program-args (append program-args (list "--print-events"))))))))
+    (when uri
+      (add-to-list 'program-args (concat "--uri=" uri) t))
+    (when verbose
+      (add-to-list 'program-args "--verbose" t))
+    (when name
+      (add-to-list 'program-args (concat "--name=" name) t))
+    (when config
+      (add-to-list 'program-args (concat "--config=" config) t))
+    (when socket
+      (add-to-list 'program-args (concat "--socket=" socket) t))
+    (when connect-socket
+      (add-to-list 'program-args (concat "--connect-socket=" connect-socket) t))
+    (when print-events
+      (add-to-list 'program-args "--print-events" t))
+    (when geometry
+      (add-to-list 'program-args (concat "--geometry=" geometry) t))
+    (when version
+      (add-to-list 'program-args (concat "--version=" version) t))
+    (when display
+      (add-to-list 'program-args (concat "--display=" display) t))
+    (when help
+      (add-to-list 'program-args "--help" t))
 
     ;; Start process
     (let* (inst
@@ -815,7 +814,7 @@ Returns an `ezbl-inst' struct."
       inst)))
 
 (defun ezbl-inst-get (&optional inst strict)
-  "Returns the ezbl instance from INST.
+    "Returns the ezbl instance from INST.
 
 If INST is an ezbl instance, then it is returned unchanged. If it
 is a buffer, then the local variable of `ezbl-inst' is
@@ -828,37 +827,37 @@ If STRICT is non-nil, raise an error if INST is not resolvable to
 an instance.
 
 Returns an `ezbl-inst'."
-  (when (null inst)
-    (set 'inst ezbl-inst))
+    (when (null inst)
+      (set 'inst ezbl-inst))
 
-  (let ((instance
-         (cond
-          ((ezbl-inst-p inst)
-           inst)
-          ((bufferp inst)
-           (with-current-buffer inst
-             ezbl-inst))
-          ((integerp inst)
-           (cdr-safe (assq inst
-                           ezbl-inst-list)))
-          ((processp inst)
-           (cdr-safe (assq (process-id inst)
-                           ezbl-inst-list)))
-          ((stringp inst)
-           (if (and (bufferp (get-buffer inst))
-                    (not (null (with-current-buffer inst
-                                 ezbl-inst))))
-               (with-current-buffer inst
-                 ezbl-inst)
-             ;; Is the name of an instance, so open the output buffer which
-             ;; corresponds to this name.
-             (when (get-buffer (format ezbl-output-buffer-format inst))
-               (with-current-buffer (format ezbl-output-buffer-format inst)
-                 ezbl-inst)))))))
-    (if (ezbl-inst-p instance)
-        instance
-      (when strict
-        (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))))))
+    (let ((instance
+           (cond
+            ((ezbl-inst-p inst)
+             inst)
+            ((bufferp inst)
+             (with-current-buffer inst
+               ezbl-inst))
+            ((integerp inst)
+             (cdr-safe (assq inst
+                             ezbl-inst-list)))
+            ((processp inst)
+             (cdr-safe (assq (process-id inst)
+                             ezbl-inst-list)))
+            ((stringp inst)
+             (if (and (bufferp (get-buffer inst))
+                      (not (null (with-current-buffer inst
+                                   ezbl-inst))))
+                 (with-current-buffer inst
+                   ezbl-inst)
+               ;; Is the name of an instance, so open the output buffer which
+               ;; corresponds to this name.
+               (when (get-buffer (format ezbl-output-buffer-format inst))
+                 (with-current-buffer (format ezbl-output-buffer-format inst)
+                   ezbl-inst)))))))
+      (if (ezbl-inst-p instance)
+          instance
+        (when strict
+          (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))))))
 
 (defun ezbl-inst-define-advice ()
   "Define and activate the advice for each slot in `ezbl-inst'.
