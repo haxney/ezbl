@@ -35,10 +35,15 @@
   :group 'ezbl
   :type 'file)
 
-(defcustom ezbl-cookie-socket "/tmp/ezbl-cookies"
+(defcustom ezbl-cookie-socket "/tmp/ezbl/cookies"
   "The location of the socket through which to handle cookies."
   :group 'ezbl
   :type 'file)
+
+(defcustom ezbl-em-socket-dir "/tmp/ezbl"
+  "Directory in which to store Uzbl event manager sockets."
+  :group 'ezbl
+  :type 'directory)
 
 (defvar ezbl-inst-list nil
   "An alist of Uzbl instances and their pids.
@@ -696,6 +701,7 @@ each one. Also, run through `ezbl-instance-spec' and call
       (error "This version of Emacs does not support embedding windows. Please get a patched version from http://github.com/jave/emacs"))
     (unless (featurep 'make-network-process '(:type seqpacket))
       (error "This version of Emacs does not support SEQPACKET sockets"))
+    (mkdir ezbl-em-socket-dir t)
     (ezbl-cookie-socket-listen nil t)
     (ezbl-inst-define-advice)
     (setq ezbl-initialized t)))
