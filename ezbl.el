@@ -692,7 +692,7 @@ each one. Also, run through `ezbl-instance-spec' and call
       (error "Emacs server is required for Ezbl, but `server-name' is nil."))
     (when (null server-process)
       (error "Emacs server is required for Ezbl, but the server is not started."))
-    (unless (featurep 'xwidget)
+    (unless (require 'xwidget nil t)
       (error "This version of Emacs does not support embedding windows. Please get a patched version from http://github.com/jave/emacs"))
     (unless (featurep 'make-network-process '(:type seqpacket))
       (error "This version of Emacs does not support SEQPACKET sockets"))
@@ -1126,20 +1126,6 @@ to VALUE and runs `ezbl-update-mode-line-format'."
 (add-hook 'ezbl-mode-hook 'ezbl-fill-window)
 (add-hook 'ezbl-mode-hook 'ezbl-update-mode-line-format)
 
-(defun ezbl-xwidget-resize-at (pos width height)
-  "Resize xwidget at postion POS to WIDTH and HEIGHT.
-
-There is no corresponding resize-id fn yet, because of display
-property/xwidget id impedance mismatch."
-  (let* ((xwidget-prop (cdr (get-text-property pos 'display)))
-         (id (plist-get  xwidget-prop ':xwidget-id)))
-
-    (setq xwidget-prop (plist-put xwidget-prop ':width width))
-    (setq xwidget-prop (plist-put xwidget-prop ':height height))
-
-    (put-text-property pos (+ 1 pos) 'display (cons 'xwidget xwidget-prop))
-    (xwidget-resize id width height)))
-
 (defun ezbl-fill-window (&optional inst)
   "Re-sizes the xwidget in the display-buffer of INST to fill its
 entire window."
@@ -1155,7 +1141,7 @@ entire window."
         ;; Turn read-only off while modifying the size of the xwidget, then
         ;; reactivate it.
         (toggle-read-only -1)
-        (ezbl-xwidget-resize-at 1 width height)
+        (xwidget-resize-at 1 width height)
         (toggle-read-only t)
         (set-buffer-modified-p nil)))))
 
