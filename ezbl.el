@@ -703,7 +703,6 @@ each one. Also, run through `ezbl-instance-spec' and call
       (error "This version of Emacs does not support SEQPACKET sockets"))
     (mkdir ezbl-em-socket-dir t)
     (ezbl-cookie-socket-listen nil t)
-    (ezbl-inst-define-advice)
     (setq ezbl-initialized t)))
 
 (defun* ezbl-inst-start (&key uri
@@ -858,32 +857,6 @@ Returns an `ezbl-inst'."
           instance
         (when strict
           (error (format "`%s' is not an Ezbl instance or resolvable to an Ezbl instance" inst))))))
-
-(defun ezbl-inst-define-advice ()
-  "Define and activate the advice for each slot in `ezbl-inst'.
-
-Makes the accessors call `ezbl-inst-get' before operating, so
-that the accessors work on things which are resolvable to an
-`ezbl-inst', rather than only allowing the insts themselves.
-
-Also redefines the `setf-method' for each slot, since `setf'
-doesn't actually call the slot accessor, so it wouldn't resolve
-its argument to an `ezbl-inst'."
-  (mapc '(lambda (item)
-           (let ((func (intern (concat "ezbl-inst-" (symbol-name item)))))
-             (ad-add-advice func
-                            ezbl-inst-get-first 'before 'first)
-             (ad-activate func)
-
-             ;; This is tricky. Redefines the `setf-method' to be the same as
-             ;; the old one, except that it is passed the result of
-             ;; `ezbl-inst-get' on the `eval'ed argument.
-             (eval (list 'define-setf-method
-                         func
-                         '(cl-x)
-                         `(apply ,(get func 'setf-method)
-                                 (list (ezbl-inst-get (eval cl-x) t)))))))
-        ezbl-inst-slots))
 
 (defun ezbl-command-exec (inst command)
   "Sends the string COMMAND to the Uzbl instance INST.
