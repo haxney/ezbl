@@ -68,30 +68,14 @@ processes.")
   "Keeps track of whether or not Ezbl has been initialized. This
 should only be set by `ezbl-init'.")
 
-(defconst ezbl-inst-slots
-  '(args
-    process
-    pid
-    output-buffer
-    display-buffer
-    vars)
-  "A list of the slot names in the `ezbl-inst' structure.
-
-`defstruct' does not keep a list of the fields of the struct for
-later use, so do this manually.")
-
-(eval `(defstruct ezbl-inst
-         "A structure containing the properties of an Ezbl instance."
-         ,@ezbl-inst-slots))
-
-(defconst ezbl-inst-get-first
-  '(ezbl-inst-get-first
-    nil ;; protected
-    t   ;; enabled
-    (advice . (lambda ()
-                (ad-set-arg 0 (ezbl-inst-get (ad-get-arg 0))))))
-  "Computed advice to apply to each of the `ezbl-inst' slot
-accessors.")
+(defstruct ezbl-inst
+  "A structure containing the properties of an Ezbl instance."
+  args
+  process
+  pid
+  output-buffer
+  display-buffer
+  vars)
 
 (defconst ezbl-output-buffer-format " *ezbl-output-%s*"
   "The format used for transforming ezbl instance names into
