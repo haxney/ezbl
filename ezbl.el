@@ -652,7 +652,7 @@ See `ezbl-commands' for a description of the format of SPEC."
           `(lambda (inst ,@args)
              ,doc
              ,(when interactive-spec `(interactive ,interactive-spec))
-             (ezbl-command-exec inst (format ,output-format ,@args))))))
+             (ezbl-command-exec (ezbl-inst-get inst t) (format ,output-format ,@args))))))
 
 (defun ezbl-command-init ()
   "Create Emacs functions from `ezbl-commands' and `ezbl-instance-spec'.
@@ -671,7 +671,7 @@ each one. Also, run through `ezbl-instance-spec' and call
              (when default
                (if (and (consp default) (eq (car default) 'eval))
                    (setq default (eval (cadr default))))
-               (ezbl-command-set inst name default))))
+               (ezbl-command-set (ezbl-inst-get inst t) name default))))
         ezbl-variables))
 
 (defun ezbl-init ()
@@ -964,7 +964,7 @@ xwidget's socket id."
   (ezbl-embed)
 
   (add-hook 'ezbl-xembed-ready-hook
-            `(lambda () (ezbl-command-uri ezbl-inst ,uri))
+            `(lambda () (ezbl-command-uri (ezbl-inst-get ezbl-inst t) ,uri))
             nil t)
   (put 'ezbl-xembed-ready-hook 'permanent-local t)
   (current-buffer))
@@ -1038,7 +1038,7 @@ process and start a new one."
 
 according to `ezbl-mode-line-format'."
   (mapc '(lambda (inst)
-           (with-current-buffer (ezbl-inst-display-buffer (car inst))
+           (with-current-buffer (ezbl-inst-display-buffer (ezbl-inst-get (cdr inst) t))
              (setq mode-line-format ezbl-mode-line-format)))
         ezbl-inst-list))
 
@@ -1053,7 +1053,7 @@ to VALUE and runs `ezbl-update-mode-line-format'."
     mode-line-mule-info
     mode-line-modified
     mode-line-frame-identification
-    (:propertize (:eval (ezbl-variable-get ezbl-inst 'title))
+    (:propertize (:eval (ezbl-variable-get (ezbl-inst-get nil t) 'title))
                  face bold)
     " -- "
     (:eval (ezbl-variable-get ezbl-inst 'uri))
@@ -1094,7 +1094,7 @@ to VALUE and runs `ezbl-update-mode-line-format'."
 (defun ezbl-fill-window (&optional inst)
   "Re-sizes the xwidget in the display-buffer of INST to fill its
 entire window."
-  (let ((buffer (ezbl-inst-display-buffer inst)))
+  (let ((buffer (ezbl-inst-display-buffer (ezbl-inst-get inst t))))
     (with-current-buffer buffer
       (let* ((edges-list (window-inside-pixel-edges (get-buffer-window buffer)))
              (left (nth 0 edges-list))
@@ -1110,12 +1110,13 @@ entire window."
         (toggle-read-only t)
         (set-buffer-modified-p nil)))))
 
-(defun ezbl-event-listener (inst answer)
+(defun ezbl-event-listener (proc answer)
   "Filter for ezbl processes.
 
-INST should be the `ezbl-inst' of the associated Uzbl process
-and ANSWER is the string returned by the process."
-  (let ((answers (split-string answer "\n" t)))
+PROC should be the Uzbl process and ANSWER is the string returned
+by the process."
+  (let ((answers (split-string answer "\n" t))
+        (inst (ezbl-inst-get proc t)))
     (dolist (ans answers)
       (if (string-match "^EVENT \\[\\([[:alnum:]]+\\)\\] \\([A-Z_]+\\) ?\\(.*\\)$" ans)
           (let ((app-name (match-string-no-properties 1 ans))
